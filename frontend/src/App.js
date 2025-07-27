@@ -195,6 +195,11 @@ const ProjectAnalyzer = ({ onAnalysisComplete }) => {
         >
           {analyzing ? (
             <div className="flex items-center justify-center">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_apiforge-2/artifacts/r0co6pp1_1000006696-removebg-preview.png" 
+                alt="KeyForge Logo" 
+                className="h-4 w-4 animate-pulse mr-2"
+              />
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Analyzing Project...
             </div>
