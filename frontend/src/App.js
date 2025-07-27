@@ -471,10 +471,17 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-indigo-600">KeyForge</h1>
+              <div className="flex items-center">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_apiforge-2/artifacts/r0co6pp1_1000006696-removebg-preview.png" 
+                  alt="KeyForge Logo" 
+                  className="h-10 w-10 mr-3"
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-indigo-600">KeyForge</h1>
+                  <p className="text-xs text-gray-500 -mt-1">Universal API Infrastructure Assistant</p>
+                </div>
               </div>
-              <p className="ml-3 text-sm text-gray-500">Universal API Infrastructure Assistant</p>
             </div>
           </div>
         </div>
