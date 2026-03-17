@@ -15,6 +15,16 @@ import ImportExport from "./components/ImportExport";
 import WebhookManager from "./components/WebhookManager";
 import CostEstimation from "./components/CostEstimation";
 import HealthChecks from "./components/HealthChecks";
+import MFASetup from "./components/MFASetup";
+import SessionManager from "./components/SessionManager";
+import IPAllowlist from "./components/IPAllowlist";
+import ExpirationTracker from "./components/ExpirationTracker";
+import CredentialPermissions from "./components/CredentialPermissions";
+import VersionHistory from "./components/VersionHistory";
+import AutoRotation from "./components/AutoRotation";
+import BreachDetection from "./components/BreachDetection";
+import UsageAnalytics from "./components/UsageAnalytics";
+import ComplianceCenter from "./components/ComplianceCenter";
 
 function App() {
   const [token, setToken] = useState(null);
@@ -68,6 +78,9 @@ function App() {
         { id: 'groups', name: 'Credential Groups', icon: '\uD83D\uDCC1' },
         { id: 'teams', name: 'Teams', icon: '\uD83D\uDC65' },
         { id: 'health', name: 'Health Checks', icon: '\uD83C\uDFE5' },
+        { id: 'versions', name: 'Version History', icon: '\uD83D\uDCDC' },
+        { id: 'auto-rotation', name: 'Auto-Rotation', icon: '\u2699\uFE0F' },
+        { id: 'expirations', name: 'Expiration Tracker', icon: '\u23F0' },
       ],
     },
     {
@@ -75,6 +88,19 @@ function App() {
       items: [
         { id: 'scanner', name: 'Secret Scanner', icon: '\uD83D\uDEE1\uFE0F' },
         { id: 'audit', name: 'Audit Log', icon: '\uD83D\uDCDD' },
+        { id: 'mfa', name: 'MFA Setup', icon: '\uD83D\uDD10' },
+        { id: 'sessions', name: 'Sessions', icon: '\uD83D\uDCBB' },
+        { id: 'ip-allowlist', name: 'IP Allowlist', icon: '\uD83C\uDF10' },
+        { id: 'breach-detection', name: 'Breach Detection', icon: '\uD83D\uDEA8' },
+        { id: 'permissions', name: 'Permissions', icon: '\uD83D\uDC64' },
+      ],
+    },
+    {
+      label: 'Analytics',
+      items: [
+        { id: 'usage-analytics', name: 'Usage Analytics', icon: '\uD83D\uDCC8' },
+        { id: 'compliance', name: 'Compliance Center', icon: '\u2705' },
+        { id: 'costs', name: 'Cost Estimation', icon: '\uD83D\uDCB0' },
       ],
     },
     {
@@ -82,7 +108,6 @@ function App() {
       items: [
         { id: 'import-export', name: 'Import / Export', icon: '\uD83D\uDCE6' },
         { id: 'webhooks', name: 'Webhooks', icon: '\uD83D\uDD14' },
-        { id: 'costs', name: 'Cost Estimation', icon: '\uD83D\uDCB0' },
       ],
     },
   ];
@@ -177,11 +202,21 @@ function App() {
             {currentView === 'groups' && <CredentialGroups api={api} />}
             {currentView === 'teams' && <TeamManager api={api} />}
             {currentView === 'health' && <HealthChecks api={api} />}
+            {currentView === 'versions' && <VersionHistory api={api} />}
+            {currentView === 'auto-rotation' && <AutoRotation api={api} />}
+            {currentView === 'expirations' && <ExpirationTracker api={api} />}
             {currentView === 'scanner' && <SecretScanner api={api} />}
             {currentView === 'audit' && <AuditLog api={api} />}
+            {currentView === 'mfa' && <MFASetup api={api} />}
+            {currentView === 'sessions' && <SessionManager api={api} />}
+            {currentView === 'ip-allowlist' && <IPAllowlist api={api} />}
+            {currentView === 'breach-detection' && <BreachDetection api={api} />}
+            {currentView === 'permissions' && <CredentialPermissions api={api} />}
+            {currentView === 'usage-analytics' && <UsageAnalytics api={api} />}
+            {currentView === 'compliance' && <ComplianceCenter api={api} />}
+            {currentView === 'costs' && <CostEstimation api={api} />}
             {currentView === 'import-export' && <ImportExport api={api} />}
             {currentView === 'webhooks' && <WebhookManager api={api} />}
-            {currentView === 'costs' && <CostEstimation api={api} />}
           </main>
         </div>
       </div>

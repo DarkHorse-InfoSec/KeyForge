@@ -1,4 +1,4 @@
-"""KeyForge API — Universal API Infrastructure Assistant (v3.0)"""
+"""KeyForge API — Universal API Infrastructure Assistant (v4.0)"""
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -28,6 +28,24 @@ from backend.routes.scanning import router as scanning_router
 from backend.routes.import_export import router as import_export_router
 from backend.routes.webhooks import router as webhooks_router
 from backend.routes.cost_estimation import router as cost_estimation_router
+
+# Phase 5 routers — Security
+from backend.routes.mfa import router as mfa_router
+from backend.routes.ip_allowlist import router as ip_allowlist_router
+from backend.routes.sessions import router as sessions_router
+from backend.routes.encryption_admin import router as encryption_admin_router
+
+# Phase 5 routers — Credential Lifecycle
+from backend.routes.expiration import router as expiration_router
+from backend.routes.credential_permissions import router as credential_permissions_router
+from backend.routes.versioning import router as versioning_router
+from backend.routes.auto_rotation import router as auto_rotation_router
+
+# Phase 5 routers — Analytics & Compliance
+from backend.routes.breach_detection import router as breach_detection_router
+from backend.routes.usage_analytics import router as usage_analytics_router
+from backend.routes.compliance import router as compliance_router
+from backend.routes.lifecycle import router as lifecycle_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -97,6 +115,53 @@ async def create_indexes():
         await db.webhooks.create_index("id", unique=True)
         await db.webhooks.create_index("user_id")
 
+        # IP Allowlist
+        await db.ip_allowlist.create_index([("user_id", 1), ("ip_address", 1)])
+
+        # Sessions
+        await db.sessions.create_index("user_id")
+        await db.sessions.create_index("token_hash", unique=True)
+
+        # Expirations
+        await db.credential_expirations.create_index("user_id")
+        await db.credential_expirations.create_index("credential_id")
+        await db.credential_expirations.create_index(
+            [("user_id", 1), ("expires_at", 1)]
+        )
+
+        # Credential permissions
+        await db.credential_permissions.create_index(
+            [("credential_id", 1), ("user_id", 1)]
+        )
+        await db.credential_permissions.create_index("granted_by")
+
+        # Credential versions
+        await db.credential_versions.create_index(
+            [("credential_id", 1), ("version_number", -1)]
+        )
+
+        # Auto-rotation configs
+        await db.auto_rotation_configs.create_index("user_id")
+        await db.auto_rotation_configs.create_index("credential_id")
+
+        # Breach checks
+        await db.breach_checks.create_index([("user_id", 1), ("check_timestamp", -1)])
+
+        # Usage events
+        await db.usage_events.create_index([("user_id", 1), ("timestamp", -1)])
+        await db.usage_events.create_index("credential_id")
+
+        # Compliance reports
+        await db.compliance_reports.create_index(
+            [("user_id", 1), ("generated_at", -1)]
+        )
+
+        # Lifecycle events
+        await db.lifecycle_events.create_index(
+            [("credential_id", 1), ("timestamp", 1)]
+        )
+        await db.lifecycle_events.create_index([("user_id", 1), ("timestamp", -1)])
+
         logger.info("Database indexes created successfully")
     except Exception as e:
         logger.warning("Index creation warning: %s", e)
@@ -105,7 +170,7 @@ async def create_indexes():
 app = FastAPI(
     title="KeyForge API",
     description="Universal API Infrastructure Assistant",
-    version="3.0.0",
+    version="4.0.0",
     lifespan=lifespan,
 )
 
@@ -126,6 +191,24 @@ app.include_router(import_export_router)
 app.include_router(webhooks_router)
 app.include_router(cost_estimation_router)
 
+# Phase 5 routers — Security
+app.include_router(mfa_router)
+app.include_router(ip_allowlist_router)
+app.include_router(sessions_router)
+app.include_router(encryption_admin_router)
+
+# Phase 5 routers — Credential Lifecycle
+app.include_router(expiration_router)
+app.include_router(credential_permissions_router)
+app.include_router(versioning_router)
+app.include_router(auto_rotation_router)
+
+# Phase 5 routers — Analytics & Compliance
+app.include_router(breach_detection_router)
+app.include_router(usage_analytics_router)
+app.include_router(compliance_router)
+app.include_router(lifecycle_router)
+
 # CORS — allow the frontend origins
 app.add_middleware(
     CORSMiddleware,
@@ -141,7 +224,7 @@ app.add_middleware(
 
 @app.get("/api/")
 async def root():
-    return {"message": "KeyForge API Infrastructure Assistant", "version": "3.0.0"}
+    return {"message": "KeyForge API Infrastructure Assistant", "version": "4.0.0"}
 
 
 @app.get("/api/health")
