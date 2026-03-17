@@ -1,7 +1,8 @@
-"""KeyForge API — Universal API Infrastructure Assistant (v4.0)"""
+"""KeyForge API — Universal API Infrastructure Assistant (v4.1)"""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from starlette.middleware.cors import CORSMiddleware
 import logging
 import sys
@@ -11,6 +12,23 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.config import client, db
+
+# Middleware
+from backend.middleware.rate_limiter import RateLimitMiddleware
+from backend.middleware.sanitizer import SanitizationMiddleware
+from backend.middleware.monitoring import MonitoringMiddleware
+from backend.middleware.error_handler import (
+    http_exception_handler,
+    validation_exception_handler,
+    generic_exception_handler,
+)
+
+# API documentation metadata
+from backend.utils.api_docs import TAGS_METADATA, API_DESCRIPTION
+
+# Migrations
+from backend.migrations.runner import run_migrations
+import backend.migrations.versions  # noqa: F401 — register migrations
 
 # Core routers
 from backend.routes.auth import router as auth_router
@@ -47,6 +65,9 @@ from backend.routes.usage_analytics import router as usage_analytics_router
 from backend.routes.compliance import router as compliance_router
 from backend.routes.lifecycle import router as lifecycle_router
 
+# Monitoring router
+from backend.routes.metrics import router as metrics_router
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -59,6 +80,7 @@ async def lifespan(app: FastAPI):
     """Modern lifespan handler: create indexes on startup, close DB on shutdown."""
     logger.info("KeyForge starting up...")
     await create_indexes()
+    await run_migrations(db)
     yield
     logger.info("KeyForge shutting down...")
     client.close()
@@ -169,10 +191,16 @@ async def create_indexes():
 
 app = FastAPI(
     title="KeyForge API",
-    description="Universal API Infrastructure Assistant",
-    version="4.0.0",
+    description=API_DESCRIPTION,
+    version="4.1.0",
     lifespan=lifespan,
+    openapi_tags=TAGS_METADATA,
 )
+
+# Exception handlers — standardized error responses
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 # Core routers
 app.include_router(auth_router)
@@ -209,6 +237,17 @@ app.include_router(usage_analytics_router)
 app.include_router(compliance_router)
 app.include_router(lifecycle_router)
 
+# Monitoring
+app.include_router(metrics_router)
+
+# Middleware stack (order matters — outermost first)
+# Monitoring wraps everything to capture timing
+app.add_middleware(MonitoringMiddleware)
+# Rate limiting before request processing
+app.add_middleware(RateLimitMiddleware)
+# Input sanitization for JSON bodies
+app.add_middleware(SanitizationMiddleware)
+
 # CORS — allow the frontend origins
 app.add_middleware(
     CORSMiddleware,
@@ -224,7 +263,7 @@ app.add_middleware(
 
 @app.get("/api/")
 async def root():
-    return {"message": "KeyForge API Infrastructure Assistant", "version": "4.0.0"}
+    return {"message": "KeyForge API Infrastructure Assistant", "version": "4.1.0"}
 
 
 @app.get("/api/health")
