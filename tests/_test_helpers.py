@@ -68,6 +68,25 @@ patch_all_db_refs()
 from backend.server import app  # noqa: E402
 
 
+def reset_rate_limiter():
+    """Clear rate limiter state so tests don't get 429 responses."""
+    from backend.middleware.rate_limiter import RateLimitMiddleware, RateLimiter
+    # Clear middleware-level buckets
+    for middleware in app.user_middleware:
+        if hasattr(middleware, "cls") and middleware.cls is RateLimitMiddleware:
+            break
+    # Walk the middleware stack to find the rate limiter instance
+    mw = app.middleware_stack
+    while mw is not None:
+        if isinstance(mw, RateLimitMiddleware):
+            mw._buckets.clear()
+            mw._auth_buckets.clear()
+            break
+        mw = getattr(mw, "app", None)
+    # Clear dependency-level rate limiter
+    RateLimiter._store.clear()
+
+
 def make_token(username="testuser"):
     """Create a valid JWT for testing authenticated endpoints."""
     from backend.security import create_access_token

@@ -32,7 +32,7 @@ class TestRegister:
         client = TestClient(app, raise_server_exceptions=False)
         resp = client.post(
             "/api/auth/register",
-            json={"username": "newuser", "password": "strongpassword"},
+            json={"username": "newuser", "password": "Strong1!pass"},
         )
         assert resp.status_code == 200
         body = resp.json()
@@ -48,7 +48,7 @@ class TestRegister:
         client = TestClient(app, raise_server_exceptions=False)
         resp = client.post(
             "/api/auth/register",
-            json={"username": "testuser", "password": "strongpassword"},
+            json={"username": "testuser", "password": "Strong1!pass"},
         )
         assert resp.status_code == 400
         assert "already registered" in resp.json()["detail"].lower()
@@ -58,7 +58,7 @@ class TestRegister:
         client = TestClient(app, raise_server_exceptions=False)
         resp = client.post(
             "/api/auth/register",
-            json={"username": "ab", "password": "strongpassword"},
+            json={"username": "ab", "password": "Strong1!pass"},
         )
         assert resp.status_code == 422
 
@@ -81,14 +81,14 @@ class TestLogin:
     def test_login_success(self):
         """Successful login returns an access_token."""
         from backend.security import hash_password
-        hashed = hash_password("correctpassword")
+        hashed = hash_password("Correct1!pw")
         user_doc = {**_FAKE_USER_DOC, "hashed_password": hashed}
         MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
 
         client = TestClient(app, raise_server_exceptions=False)
         resp = client.post(
             "/api/auth/login",
-            data={"username": "testuser", "password": "correctpassword"},
+            data={"username": "testuser", "password": "Correct1!pw"},
         )
         assert resp.status_code == 200
         body = resp.json()
@@ -98,14 +98,14 @@ class TestLogin:
     def test_login_wrong_password(self):
         """Wrong password returns 401."""
         from backend.security import hash_password
-        hashed = hash_password("correctpassword")
+        hashed = hash_password("Correct1!pw")
         user_doc = {**_FAKE_USER_DOC, "hashed_password": hashed}
         MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
 
         client = TestClient(app, raise_server_exceptions=False)
         resp = client.post(
             "/api/auth/login",
-            data={"username": "testuser", "password": "wrongpassword"},
+            data={"username": "testuser", "password": "Wrong1!pwd"},
         )
         assert resp.status_code == 401
 
