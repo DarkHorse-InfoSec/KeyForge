@@ -51,7 +51,10 @@ class TestRegister:
             json={"username": "testuser", "password": "Strong1!pass"},
         )
         assert resp.status_code == 400
-        assert "already registered" in resp.json()["detail"].lower()
+        body = resp.json()
+        # Error handler wraps HTTPException in {"message": ...} format
+        msg = body.get("detail", body.get("message", "")).lower()
+        assert "already registered" in msg
 
     def test_register_short_username(self):
         """Username shorter than 3 characters returns 422 validation error."""
