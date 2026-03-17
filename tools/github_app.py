@@ -22,6 +22,11 @@ import uvicorn
 # ── Configuration ─────────────────────────────────────────────────────────────
 
 GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "")
+if not GITHUB_WEBHOOK_SECRET:
+    logging.getLogger("keyforge.github_app").warning(
+        "GITHUB_WEBHOOK_SECRET not set — webhook signature verification is DISABLED. "
+        "Set this variable in production to prevent unauthorized webhook calls."
+    )
 GITHUB_APP_PRIVATE_KEY = os.environ.get("GITHUB_APP_PRIVATE_KEY", "")
 
 logging.basicConfig(
@@ -284,4 +289,5 @@ async def handle_github_webhook(
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8002))
     logger.info("Starting KeyForge GitHub App on port %d", port)
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    bind_host = os.environ.get("BIND_HOST", "127.0.0.1")
+    uvicorn.run(app, host=bind_host, port=port)

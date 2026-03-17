@@ -1,6 +1,7 @@
 """Session management routes for KeyForge."""
 
 import hashlib
+import hmac
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Depends, Request
@@ -50,14 +51,14 @@ async def list_sessions(
                 user_agent=sess.get("user_agent"),
                 created_at=sess["created_at"],
                 last_active=sess["last_active"],
-                is_current=(sess["token_hash"] == current_token_hash),
+                is_current=hmac.compare_digest(sess["token_hash"], current_token_hash),
             )
         )
 
     return results
 
 
-@router.delete("/sessions/{session_id}")
+@router.delete("/sessions/{session_id}", response_model=dict)
 async def revoke_session(
     session_id: str,
     current_user: dict = Depends(get_current_user),
@@ -73,7 +74,7 @@ async def revoke_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if session["token_hash"] == current_token_hash:
+    if hmac.compare_digest(session["token_hash"], current_token_hash):
         raise HTTPException(status_code=400, detail="Cannot revoke the current session")
 
     await db.sessions.update_one(
@@ -87,7 +88,7 @@ async def revoke_session(
     return {"message": "Session revoked"}
 
 
-@router.delete("/sessions")
+@router.delete("/sessions", response_model=dict)
 async def revoke_all_sessions(
     current_user: dict = Depends(get_current_user),
     token: str = Depends(oauth2_scheme),
@@ -112,7 +113,7 @@ async def revoke_all_sessions(
     return {"message": f"Revoked {result.modified_count} sessions"}
 
 
-@router.post("/sessions/record")
+@router.post("/sessions/record", response_model=dict)
 async def record_session(
     body: RecordSessionRequest,
     current_user: dict = Depends(get_current_user),

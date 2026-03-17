@@ -38,7 +38,7 @@ def _setup_auth():
 
 def _fake_cred_doc(cred_id="cred-1", user_id="user-123", api_name="openai"):
     from backend.security import encrypt_api_key
-    encrypted = encrypt_api_key("sk-testapikey1234567890abcdefghijklmnopqrst")
+    encrypted = encrypt_api_key("test-fake-key-not-real-00000000000000000000")
     return {
         "id": cred_id,
         "user_id": user_id,
@@ -66,7 +66,7 @@ class TestCreateCredential:
             "/api/credentials",
             json={
                 "api_name": "openai",
-                "api_key": "sk-testapikey1234567890abcdefghijklmnopqrst",
+                "api_key": "test-fake-key-not-real-00000000000000000000",
                 "environment": "development",
             },
             headers=_auth_headers(),
@@ -209,7 +209,7 @@ class TestCredentialSecurity:
             "/api/credentials",
             json={
                 "api_name": "stripe",
-                "api_key": "sk_test_abcdefghijklmnopqrstuvwx",
+                "api_key": "test-fake-stripe-key-000000uvwx",
                 "environment": "production",
             },
             headers=_auth_headers(),
@@ -236,7 +236,7 @@ class TestCredentialSecurity:
         # The Fernet-encrypted key (starts with 'gAAAAA') must not appear
         assert encrypted_value not in raw_text
         # Nor should the plaintext key
-        assert "sk-testapikey1234567890abcdefghijklmnopqrst" not in raw_text
+        assert "test-fake-key-not-real-00000000000000000000" not in raw_text
 
     def test_list_does_not_leak_encrypted_keys(self):
         """Listing credentials must not include raw encrypted keys."""

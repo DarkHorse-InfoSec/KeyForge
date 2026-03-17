@@ -37,7 +37,7 @@ async def rotate_user_data_key(
         logger.error("User data key rotation failed for %s: %s", user_id, exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Data key rotation failed: {exc}",
+            detail="Data key rotation failed. Check server logs for details.",
         )
 
     # Audit log
@@ -132,7 +132,7 @@ async def rotate_master_key(
         logger.error("Master key rotation failed: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Master key rotation failed: {exc}",
+            detail="Master key rotation failed. Check server logs for details.",
         )
 
     # Audit log (do NOT store the new key itself)
@@ -148,9 +148,8 @@ async def rotate_master_key(
     )
 
     logger.warning(
-        "Master key rotated by user %s. Update ENCRYPTION_KEY env var to: %s",
+        "Master key rotated by user %s. Update ENCRYPTION_KEY env var with the new key.",
         current_user["username"],
-        new_master_key,
     )
 
     return MasterKeyRotationResponse(

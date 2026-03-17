@@ -8,7 +8,7 @@ from backend.middleware.monitoring import metrics
 router = APIRouter(tags=["monitoring"])
 
 
-@router.get("/api/metrics")
+@router.get("/api/metrics", response_model=dict)
 async def get_metrics():
     """Get application metrics summary (JSON)."""
     return metrics.get_summary()

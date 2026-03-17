@@ -67,7 +67,7 @@ async def get_project_analyses(
     return [ProjectAnalysis(**a) for a in analyses]
 
 
-@router.post("/projects/{project_id}/upload-files")
+@router.post("/projects/{project_id}/upload-files", response_model=dict)
 async def upload_project_files(
     project_id: str,
     files: List[UploadFile] = File(...),

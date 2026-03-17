@@ -63,10 +63,12 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 JWT_SECRET = os.environ.get("JWT_SECRET")
 if not JWT_SECRET:
-    JWT_SECRET = "insecure-dev-secret-change-me"
+    import secrets as _secrets
+    JWT_SECRET = _secrets.token_urlsafe(64)
     warnings.warn(
-        "JWT_SECRET not set — using an insecure default. "
-        "Set the JWT_SECRET environment variable in production.",
+        "JWT_SECRET not set — generated a random ephemeral secret. "
+        "Tokens will NOT survive a restart. "
+        "Set the JWT_SECRET environment variable for persistence.",
         RuntimeWarning,
         stacklevel=1,
     )

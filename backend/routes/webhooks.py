@@ -11,6 +11,7 @@ import requests as http_requests
 
 from backend.config import db, logger
 from backend.security import get_current_user
+from backend.utils.validators import validate_url
 
 router = APIRouter(prefix="/api", tags=["webhooks"])
 
@@ -105,6 +106,13 @@ async def create_webhook(
     current_user: dict = Depends(get_current_user),
 ):
     """Register a new webhook endpoint for the authenticated user."""
+    # Validate webhook URL (SSRF protection)
+    if not validate_url(webhook.url):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid webhook URL. Must be a valid public HTTP(S) URL.",
+        )
+
     # Validate events
     invalid = [e for e in webhook.events if e not in VALID_EVENTS]
     if invalid:
@@ -174,6 +182,13 @@ async def update_webhook(
 
     update_data = {k: v for k, v in update.dict().items() if v is not None}
 
+    # Validate webhook URL if provided (SSRF protection)
+    if "url" in update_data and not validate_url(update_data["url"]):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid webhook URL. Must be a valid public HTTP(S) URL.",
+        )
+
     # Validate events if provided
     if "events" in update_data:
         invalid = [e for e in update_data["events"] if e not in VALID_EVENTS]
@@ -201,7 +216,7 @@ async def update_webhook(
     )
 
 
-@router.delete("/webhooks/{webhook_id}")
+@router.delete("/webhooks/{webhook_id}", response_model=dict)
 async def delete_webhook(
     webhook_id: str,
     current_user: dict = Depends(get_current_user),
@@ -216,7 +231,7 @@ async def delete_webhook(
     return {"message": "Webhook deleted successfully"}
 
 
-@router.post("/webhooks/{webhook_id}/test")
+@router.post("/webhooks/{webhook_id}/test", response_model=dict)
 async def test_webhook(
     webhook_id: str,
     current_user: dict = Depends(get_current_user),

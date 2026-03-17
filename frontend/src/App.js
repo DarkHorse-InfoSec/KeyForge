@@ -25,6 +25,13 @@ import AutoRotation from "./components/AutoRotation";
 import BreachDetection from "./components/BreachDetection";
 import UsageAnalytics from "./components/UsageAnalytics";
 import ComplianceCenter from "./components/ComplianceCenter";
+import EnvelopeEncryption from "./components/EnvelopeEncryption";
+import KMSManager from "./components/KMSManager";
+import AuditIntegrity from "./components/AuditIntegrity";
+import CredentialProxy from "./components/CredentialProxy";
+import BackupManager from "./components/BackupManager";
+import ExpirationPolicy from "./components/ExpirationPolicy";
+import FieldEncryption from "./components/FieldEncryption";
 
 function App() {
   const [token, setToken] = useState(null);
@@ -93,6 +100,18 @@ function App() {
         { id: 'ip-allowlist', name: 'IP Allowlist', icon: '\uD83C\uDF10' },
         { id: 'breach-detection', name: 'Breach Detection', icon: '\uD83D\uDEA8' },
         { id: 'permissions', name: 'Permissions', icon: '\uD83D\uDC64' },
+      ],
+    },
+    {
+      label: 'Infrastructure',
+      items: [
+        { id: 'envelope-encryption', name: 'Envelope Encryption', icon: '\uD83D\uDD10' },
+        { id: 'kms-manager', name: 'KMS Manager', icon: '\uD83D\uDDDD\uFE0F' },
+        { id: 'audit-integrity', name: 'Audit Integrity', icon: '\uD83D\uDD17' },
+        { id: 'credential-proxy', name: 'Credential Proxy', icon: '\uD83C\uDFAB' },
+        { id: 'backup-manager', name: 'Backup Manager', icon: '\uD83D\uDCBE' },
+        { id: 'expiration-policy', name: 'Expiration Policy', icon: '\uD83D\uDCCB' },
+        { id: 'field-encryption', name: 'Field Encryption', icon: '\uD83D\uDD12' },
       ],
     },
     {
@@ -212,6 +231,13 @@ function App() {
             {currentView === 'ip-allowlist' && <IPAllowlist api={api} />}
             {currentView === 'breach-detection' && <BreachDetection api={api} />}
             {currentView === 'permissions' && <CredentialPermissions api={api} />}
+            {currentView === 'envelope-encryption' && <EnvelopeEncryption api={api} />}
+            {currentView === 'kms-manager' && <KMSManager api={api} />}
+            {currentView === 'audit-integrity' && <AuditIntegrity api={api} />}
+            {currentView === 'credential-proxy' && <CredentialProxy api={api} />}
+            {currentView === 'backup-manager' && <BackupManager api={api} />}
+            {currentView === 'expiration-policy' && <ExpirationPolicy api={api} />}
+            {currentView === 'field-encryption' && <FieldEncryption api={api} />}
             {currentView === 'usage-analytics' && <UsageAnalytics api={api} />}
             {currentView === 'compliance' && <ComplianceCenter api={api} />}
             {currentView === 'costs' && <CostEstimation api={api} />}

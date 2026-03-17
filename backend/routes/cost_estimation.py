@@ -114,7 +114,7 @@ def _estimate_monthly_cost(api_name: str) -> float | None:
 
 # ── Routes ────────────────────────────────────────────────────────────────
 
-@router.get("/cost-estimation/summary")
+@router.get("/cost-estimation/summary", response_model=dict)
 async def cost_estimation_summary(
     current_user: dict = Depends(get_current_user),
 ):
@@ -150,7 +150,7 @@ async def cost_estimation_summary(
     }
 
 
-@router.get("/cost-estimation/{api_name}")
+@router.get("/cost-estimation/{api_name}", response_model=dict)
 async def cost_estimation_detail(
     api_name: str,
     current_user: dict = Depends(get_current_user),
@@ -170,7 +170,7 @@ async def cost_estimation_detail(
     }
 
 
-@router.get("/cost-estimation")
+@router.get("/cost-estimation", response_model=dict)
 async def cost_estimation_list(
     current_user: dict = Depends(get_current_user),
 ):

@@ -254,7 +254,7 @@ def _generate_general_findings(cred_analysis: dict, security_analysis: dict, aud
     return findings
 
 
-@router.post("/compliance/generate/{report_type}")
+@router.post("/compliance/generate/{report_type}", response_model=dict)
 async def generate_compliance_report(
     report_type: str,
     current_user: dict = Depends(get_current_user),
@@ -310,7 +310,7 @@ async def generate_compliance_report(
     return report_doc
 
 
-@router.get("/compliance/reports")
+@router.get("/compliance/reports", response_model=list[dict])
 async def list_compliance_reports(
     current_user: dict = Depends(get_current_user),
 ):
@@ -325,7 +325,7 @@ async def list_compliance_reports(
     return reports
 
 
-@router.get("/compliance/reports/{report_id}")
+@router.get("/compliance/reports/{report_id}", response_model=dict)
 async def get_compliance_report(
     report_id: str,
     current_user: dict = Depends(get_current_user),
@@ -342,7 +342,7 @@ async def get_compliance_report(
     return report
 
 
-@router.get("/compliance/score")
+@router.get("/compliance/score", response_model=dict)
 async def get_compliance_score(
     current_user: dict = Depends(get_current_user),
 ):

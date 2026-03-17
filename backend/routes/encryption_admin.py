@@ -94,7 +94,7 @@ async def rotate_encryption_key(
     )
 
 
-@router.get("/admin/encryption-status")
+@router.get("/admin/encryption-status", response_model=dict)
 async def encryption_status(current_user: dict = Depends(get_current_user)):
     """Return encryption health information for the current user's credentials."""
     total_credentials = await db.credentials.count_documents(

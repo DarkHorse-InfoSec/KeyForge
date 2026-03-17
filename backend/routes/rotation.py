@@ -114,7 +114,7 @@ async def update_rotation_policy(
     return updated
 
 
-@router.delete("/rotation-policies/{policy_id}")
+@router.delete("/rotation-policies/{policy_id}", response_model=dict)
 async def delete_rotation_policy(
     policy_id: str,
     current_user: dict = Depends(get_current_user),

@@ -13,7 +13,11 @@ logger = logging.getLogger("keyforge.sanitizer")
 
 # MongoDB operator patterns that should never appear in user input
 NOSQL_OPERATORS = re.compile(
-    r'\$(?:gt|gte|lt|lte|ne|in|nin|and|or|not|nor|exists|type|regex|where|expr|jsonSchema|mod|text|all|elemMatch|size|slice)'
+    r'\$(?:gt|gte|lt|lte|ne|in|nin|and|or|not|nor|exists|type|regex|where|expr|'
+    r'jsonSchema|mod|text|all|elemMatch|size|slice|'
+    r'set|unset|push|pull|rename|inc|addToSet|pop|'
+    r'lookup|group|match|project|unwind|replaceRoot|merge|out|'
+    r'currentDate|bit|min|max|mul)'
 )
 
 # XSS patterns
@@ -83,6 +87,17 @@ class SanitizationMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next):
+        # Check query parameters for injection / XSS on ALL methods
+        try:
+            for key, value in request.query_params.items():
+                check_nosql_injection(key, path="query_key")
+                check_nosql_injection(value, path="query_value")
+                check_xss(value, path="query_value")
+        except HTTPException:
+            raise
+        except Exception:
+            pass  # Don't block on sanitization errors
+
         if request.method in ("POST", "PUT", "PATCH"):
             content_type = request.headers.get("content-type", "")
             if "application/json" in content_type:

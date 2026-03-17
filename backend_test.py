@@ -4,6 +4,7 @@ KeyForge Backend API Testing Suite
 Tests all API endpoints for the KeyForge application
 """
 
+import os
 import requests
 import sys
 import json
@@ -11,7 +12,8 @@ from datetime import datetime
 from typing import Dict, Any
 
 class KeyForgeAPITester:
-    def __init__(self, base_url="https://6119ef65-d108-47ae-9082-3f721b54f551.preview.emergentagent.com"):
+    def __init__(self, base_url=None):
+        base_url = base_url or os.environ.get("KEYFORGE_TEST_URL", "http://localhost:8001")
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
@@ -94,16 +96,16 @@ import openai
 import stripe
 from github import Github
 
-openai.api_key = "sk-test-123"
-stripe.api_key = "sk_test_456"
-GITHUB_CLIENT_ID = "github_123"
+openai.api_key = "test-fake-key-00000"
+stripe.api_key = "test-fake-key-00000"
+GITHUB_CLIENT_ID = "test-fake-id-00000"
 """
         files = {
             'files': ('test_app.py', mock_file_content, 'text/plain')
         }
         return self.run_test("File Upload Analysis", "POST", "projects/demo-project/upload-files", 200, files=files)
 
-    def test_create_credential(self, api_name="openai", api_key="sk-test-123456"):
+    def test_create_credential(self, api_name="openai", api_key="test-fake-key-00000"):
         """Test creating a new credential"""
         credential_data = {
             "api_name": api_name,
@@ -126,7 +128,7 @@ GITHUB_CLIENT_ID = "github_123"
     def test_update_credential(self, credential_id):
         """Test updating a credential"""
         update_data = {
-            "api_key": "sk-updated-789",
+            "api_key": "test-fake-updated-key-00000",
             "environment": "staging"
         }
         return self.run_test("Update Credential", "PUT", f"credentials/{credential_id}", 200, update_data)
@@ -180,9 +182,9 @@ GITHUB_CLIENT_ID = "github_123"
         
         # Test multiple API types
         api_types = [
-            ("openai", "sk-test-openai-123"),
-            ("stripe", "sk_test_stripe_456"),
-            ("github", "ghp_github_789")
+            ("openai", "test-fake-openai-key-00000"),
+            ("stripe", "test-fake-stripe-key-00000"),
+            ("github", "test-fake-github-key-00000"),
         ]
         
         for api_name, api_key in api_types:

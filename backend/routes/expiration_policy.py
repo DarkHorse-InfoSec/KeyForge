@@ -34,7 +34,7 @@ import uuid
 router = APIRouter(prefix="/api/policies/expiration", tags=["expiration-policy"])
 
 
-@router.get("/policy")
+@router.get("/policy", response_model=dict)
 async def get_policy(
     current_user: dict = Depends(get_current_user),
 ):
@@ -43,7 +43,7 @@ async def get_policy(
     return policy
 
 
-@router.put("/policy")
+@router.put("/policy", response_model=dict)
 async def update_policy(
     update: ExpirationPolicyUpdate,
     current_user: dict = Depends(get_current_user),
@@ -72,7 +72,7 @@ async def check_credential(
     return result
 
 
-@router.get("/violations")
+@router.get("/violations", response_model=list[dict])
 async def list_violations(
     current_user: dict = Depends(get_current_user),
 ):
@@ -83,7 +83,7 @@ async def list_violations(
     return violations
 
 
-@router.post("/enforce/{credential_id}")
+@router.post("/enforce/{credential_id}", response_model=dict)
 async def enforce_credential(
     credential_id: str,
     body: EnforceRotationRequest = EnforceRotationRequest(),
@@ -103,7 +103,7 @@ async def enforce_credential(
     return result
 
 
-@router.post("/exempt/{credential_id}")
+@router.post("/exempt/{credential_id}", response_model=dict)
 async def exempt_credential(
     credential_id: str,
     body: PolicyExemptionCreate,

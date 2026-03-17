@@ -85,7 +85,7 @@ async def list_proxy_tokens(
     return ProxyTokenList(tokens=items, total=len(items))
 
 
-@router.delete("/tokens/{token_id}")
+@router.delete("/tokens/{token_id}", response_model=dict)
 async def revoke_proxy_token(
     token_id: str,
     current_user: dict = Depends(get_current_user),
@@ -133,7 +133,7 @@ async def proxy_request(body: ProxyRequest):
     )
 
 
-@router.post("/cleanup")
+@router.post("/cleanup", response_model=dict)
 async def cleanup_expired_tokens(
     current_user: dict = Depends(get_current_user),
 ):

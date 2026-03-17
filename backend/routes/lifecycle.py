@@ -29,7 +29,7 @@ class RecordLifecycleEventRequest(BaseModel):
     details: Optional[str] = ""
 
 
-@router.post("/lifecycle/events")
+@router.post("/lifecycle/events", response_model=dict)
 async def record_lifecycle_event(
     body: RecordLifecycleEventRequest,
     current_user: dict = Depends(get_current_user),
@@ -62,7 +62,7 @@ async def record_lifecycle_event(
     return {"message": "Lifecycle event recorded", "event_id": event_doc["id"]}
 
 
-@router.get("/lifecycle/{credential_id}/timeline")
+@router.get("/lifecycle/{credential_id}/timeline", response_model=LifecycleTimelineResponse)
 async def get_credential_timeline(
     credential_id: str,
     current_user: dict = Depends(get_current_user),
@@ -105,7 +105,7 @@ async def get_credential_timeline(
     }
 
 
-@router.get("/lifecycle/recent")
+@router.get("/lifecycle/recent", response_model=list[dict])
 async def get_recent_lifecycle_events(
     current_user: dict = Depends(get_current_user),
 ):
@@ -130,7 +130,7 @@ async def get_recent_lifecycle_events(
     return result
 
 
-@router.get("/lifecycle/summary")
+@router.get("/lifecycle/summary", response_model=dict)
 async def get_lifecycle_summary(
     current_user: dict = Depends(get_current_user),
 ):

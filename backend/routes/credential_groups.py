@@ -167,7 +167,7 @@ async def update_group(
     )
 
 
-@router.delete("/credential-groups/{group_id}")
+@router.delete("/credential-groups/{group_id}", response_model=dict)
 async def delete_group(
     group_id: str,
     current_user: dict = Depends(get_current_user),
@@ -182,7 +182,7 @@ async def delete_group(
 
 # ── Credential membership within groups ──────────────────────────────────────
 
-@router.post("/credential-groups/{group_id}/credentials", status_code=201)
+@router.post("/credential-groups/{group_id}/credentials", response_model=dict, status_code=201)
 async def add_credential_to_group(
     group_id: str,
     body: dict,
@@ -217,7 +217,7 @@ async def add_credential_to_group(
     return {"message": "Credential added to group", "credential_id": credential_id, "group_id": group_id}
 
 
-@router.delete("/credential-groups/{group_id}/credentials/{credential_id}")
+@router.delete("/credential-groups/{group_id}/credentials/{credential_id}", response_model=dict)
 async def remove_credential_from_group(
     group_id: str,
     credential_id: str,

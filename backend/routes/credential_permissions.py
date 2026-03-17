@@ -129,7 +129,7 @@ async def list_permissions(
     return results
 
 
-@router.delete("/credential-permissions/{permission_id}")
+@router.delete("/credential-permissions/{permission_id}", response_model=dict)
 async def revoke_permission(
     permission_id: str,
     current_user: dict = Depends(get_current_user),

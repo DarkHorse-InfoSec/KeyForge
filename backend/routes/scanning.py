@@ -39,7 +39,7 @@ async def _read_upload(file: UploadFile) -> str:
 # ── POST /api/scan/secrets ─────────────────────────────────────────────────────
 
 
-@router.post("/scan/secrets")
+@router.post("/scan/secrets", response_model=dict)
 async def scan_secrets(
     files: List[UploadFile] = File(...),
     current_user: dict = Depends(get_current_user),
@@ -61,7 +61,7 @@ async def scan_secrets(
     # Persist scan result
     scan_record = {
         "_id": str(uuid.uuid4()),
-        "user_id": current_user["_id"],
+        "user_id": current_user["id"],
         "scan_type": "secrets",
         "file_count": len(files),
         "filenames": [f.filename or "unknown" for f in files],
@@ -83,7 +83,7 @@ async def scan_secrets(
 # ── POST /api/scan/mask-suggestions ───────────────────────────────────────────
 
 
-@router.post("/scan/mask-suggestions")
+@router.post("/scan/mask-suggestions", response_model=dict)
 async def mask_suggestions(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
@@ -100,7 +100,7 @@ async def mask_suggestions(
     # Persist scan result
     scan_record = {
         "_id": str(uuid.uuid4()),
-        "user_id": current_user["_id"],
+        "user_id": current_user["id"],
         "scan_type": "mask_suggestions",
         "file_count": 1,
         "filenames": [filename],
@@ -120,7 +120,7 @@ async def mask_suggestions(
 # ── POST /api/scan/dependencies ───────────────────────────────────────────────
 
 
-@router.post("/scan/dependencies")
+@router.post("/scan/dependencies", response_model=dict)
 async def scan_dependencies(
     files: List[UploadFile] = File(...),
     current_user: dict = Depends(get_current_user),
@@ -142,7 +142,7 @@ async def scan_dependencies(
 
     # Cross-reference with user's stored credentials
     user_credentials = await db.credentials.find(
-        {"user_id": current_user["_id"]}
+        {"user_id": current_user["id"]}
     ).to_list(length=500)
 
     stored_apis = {cred.get("api_name", "").lower() for cred in user_credentials}
@@ -155,7 +155,7 @@ async def scan_dependencies(
     # Persist scan result
     scan_record = {
         "_id": str(uuid.uuid4()),
-        "user_id": current_user["_id"],
+        "user_id": current_user["id"],
         "scan_type": "dependencies",
         "file_count": len(files),
         "filenames": [f.filename or "unknown" for f in files],
@@ -177,13 +177,13 @@ async def scan_dependencies(
 # ── GET /api/scan/history ─────────────────────────────────────────────────────
 
 
-@router.get("/scan/history")
+@router.get("/scan/history", response_model=dict)
 async def scan_history(
     current_user: dict = Depends(get_current_user),
 ):
     """Return the authenticated user's scan history, newest first."""
     records = (
-        await db.scan_results.find({"user_id": current_user["_id"]})
+        await db.scan_results.find({"user_id": current_user["id"]})
         .sort("timestamp", -1)
         .to_list(length=100)
     )

@@ -17,7 +17,7 @@ except ImportError:
 router = APIRouter(prefix="/api", tags=["dashboard"])
 
 
-@router.get("/dashboard/overview")
+@router.get("/dashboard/overview", response_model=dict)
 async def get_dashboard_overview(
     current_user: dict = Depends(get_current_user),
 ):
@@ -62,7 +62,7 @@ async def get_dashboard_overview(
     }
 
 
-@router.get("/api-catalog")
+@router.get("/api-catalog", response_model=dict)
 async def get_api_catalog(
     skip: int = 0,
     limit: int = 20,

@@ -65,13 +65,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 async def generic_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected exceptions."""
+    """Handle unexpected exceptions.
+
+    Logs the exception type and traceback for debugging, but never
+    exposes internal details in the response sent to the client.
+    """
+    # Log exception type and path; avoid interpolating raw user input.
     logger.error(
-        "Unhandled exception on %s %s: %s\n%s",
+        "Unhandled %s on %s %s",
+        type(exc).__name__,
         request.method,
         request.url.path,
-        str(exc),
-        traceback.format_exc(),
+        exc_info=True,      # Let the logging framework attach the traceback
     )
     return JSONResponse(
         status_code=500,

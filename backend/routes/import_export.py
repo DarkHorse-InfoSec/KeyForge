@@ -70,7 +70,7 @@ def _parse_env_content(content: str) -> List[Dict[str, str]]:
     return entries
 
 
-@router.post("/import/env")
+@router.post("/import/env", response_model=dict)
 async def import_env(
     content: str = Body(..., media_type="text/plain"),
     current_user: dict = Depends(get_current_user),
@@ -121,7 +121,7 @@ async def import_env(
     }
 
 
-@router.post("/import/json")
+@router.post("/import/json", response_model=dict)
 async def import_json(
     entries: List[Dict] = Body(...),
     current_user: dict = Depends(get_current_user),

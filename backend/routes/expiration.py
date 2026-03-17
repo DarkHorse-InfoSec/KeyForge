@@ -146,7 +146,7 @@ async def update_expiration(
     return _compute_expiration_fields(updated, api_name=api_name)
 
 
-@router.delete("/expirations/{expiration_id}")
+@router.delete("/expirations/{expiration_id}", response_model=dict)
 async def delete_expiration(
     expiration_id: str,
     current_user: dict = Depends(get_current_user),
@@ -161,7 +161,7 @@ async def delete_expiration(
     return {"message": "Expiration tracking removed successfully"}
 
 
-@router.get("/expirations/summary")
+@router.get("/expirations/summary", response_model=dict)
 async def get_expiration_summary(
     current_user: dict = Depends(get_current_user),
 ):

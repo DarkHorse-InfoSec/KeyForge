@@ -146,7 +146,7 @@ async def update_team(
     )
 
 
-@router.delete("/teams/{team_id}")
+@router.delete("/teams/{team_id}", response_model=dict)
 async def delete_team(
     team_id: str,
     current_user: dict = Depends(get_current_user),
@@ -230,7 +230,7 @@ async def list_members(
     return results
 
 
-@router.delete("/teams/{team_id}/members/{user_id}")
+@router.delete("/teams/{team_id}/members/{user_id}", response_model=dict)
 async def remove_member(
     team_id: str,
     user_id: str,
@@ -252,7 +252,7 @@ async def remove_member(
 
 # ── Credential sharing ───────────────────────────────────────────────────────
 
-@router.post("/teams/{team_id}/share-credential", status_code=201)
+@router.post("/teams/{team_id}/share-credential", response_model=dict, status_code=201)
 async def share_credential(
     team_id: str,
     body: dict,
@@ -305,7 +305,7 @@ async def share_credential(
     }
 
 
-@router.get("/teams/{team_id}/credentials")
+@router.get("/teams/{team_id}/credentials", response_model=list[dict])
 async def list_team_credentials(
     team_id: str,
     current_user: dict = Depends(get_current_user),

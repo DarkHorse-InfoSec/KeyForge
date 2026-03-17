@@ -22,6 +22,7 @@ from backend.middleware.error_handler import (
     validation_exception_handler,
     generic_exception_handler,
 )
+from backend.middleware.security_headers import SecurityHeadersMiddleware
 
 # API documentation metadata
 from backend.utils.api_docs import TAGS_METADATA, API_DESCRIPTION
@@ -280,6 +281,8 @@ app.include_router(backup_router)
 app.include_router(expiration_policy_router)
 
 # Middleware stack (order matters — outermost first)
+# Security headers on every response
+app.add_middleware(SecurityHeadersMiddleware)
 # Monitoring wraps everything to capture timing
 app.add_middleware(MonitoringMiddleware)
 # Rate limiting before request processing
@@ -295,8 +298,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 

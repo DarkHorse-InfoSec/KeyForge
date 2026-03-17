@@ -61,7 +61,7 @@ async def mfa_setup(current_user: dict = Depends(get_current_user)):
     )
 
 
-@router.post("/mfa/verify")
+@router.post("/mfa/verify", response_model=dict)
 async def mfa_verify(body: MFAVerify, current_user: dict = Depends(get_current_user)):
     """Verify a TOTP code against the stored secret. Also used to finalise MFA setup."""
     secret = current_user.get("mfa_secret_plain")
@@ -99,7 +99,7 @@ async def mfa_verify(body: MFAVerify, current_user: dict = Depends(get_current_u
     raise HTTPException(status_code=400, detail="Invalid TOTP code")
 
 
-@router.post("/mfa/disable")
+@router.post("/mfa/disable", response_model=dict)
 async def mfa_disable(body: MFAVerify, current_user: dict = Depends(get_current_user)):
     """Disable MFA for the current user. Requires a valid TOTP code to confirm."""
     secret = current_user.get("mfa_secret_plain")

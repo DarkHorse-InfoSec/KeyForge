@@ -148,7 +148,7 @@ async def check_credential_breach(
     return await _run_breach_check(credential_id, current_user["id"])
 
 
-@router.get("/breach-check/results")
+@router.get("/breach-check/results", response_model=list[dict])
 async def get_breach_check_results(
     current_user: dict = Depends(get_current_user),
 ):
@@ -163,7 +163,7 @@ async def get_breach_check_results(
     return results
 
 
-@router.post("/breach-check/scan-all")
+@router.post("/breach-check/scan-all", response_model=dict)
 async def scan_all_credentials(
     current_user: dict = Depends(get_current_user),
 ):
@@ -196,7 +196,7 @@ async def scan_all_credentials(
     }
 
 
-@router.get("/breach-check/summary")
+@router.get("/breach-check/summary", response_model=dict)
 async def get_breach_check_summary(
     current_user: dict = Depends(get_current_user),
 ):

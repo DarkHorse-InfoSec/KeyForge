@@ -10,9 +10,11 @@ import os
 import time
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from backend.config import logger
 from backend.encryption.kms import get_kms_provider
+from backend.security import get_current_user
 from backend.models_kms import KMSProviderInfo, KMSStatus, KMSTestResult
 
 router = APIRouter(prefix="/api/kms", tags=["kms"])
@@ -23,13 +25,14 @@ router = APIRouter(prefix="/api/kms", tags=["kms"])
 
 
 @router.get("/status", response_model=KMSStatus)
-async def kms_status():
+async def kms_status(current_user: dict = Depends(get_current_user)):
     """Return metadata about the currently active KMS provider."""
     try:
         provider = get_kms_provider()
         return KMSStatus(**provider.get_status())
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"KMS provider error: {exc}")
+        logger.error("KMS provider error: %s", exc)
+        raise HTTPException(status_code=500, detail="KMS provider error. Check server logs for details.")
 
 
 # ---------------------------------------------------------------------------
@@ -40,7 +43,7 @@ _TEST_PAYLOAD = b"keyforge-kms-connectivity-test"
 
 
 @router.post("/test", response_model=KMSTestResult)
-async def kms_test():
+async def kms_test(current_user: dict = Depends(get_current_user)):
     """Perform an encrypt/decrypt round-trip and a data-key generation test."""
     start = time.perf_counter()
     provider_name = os.environ.get("KMS_PROVIDER", "local")
@@ -90,7 +93,7 @@ async def kms_test():
 
 
 @router.get("/providers", response_model=List[KMSProviderInfo])
-async def kms_providers():
+async def kms_providers(current_user: dict = Depends(get_current_user)):
     """List all supported KMS providers and their configuration requirements."""
 
     # Check optional dependency availability

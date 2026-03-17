@@ -1,6 +1,6 @@
 """API routes for MongoDB field-level encryption management."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from backend.config import db, logger
 from backend.encryption.field_encryption import FieldEncryptor, SENSITIVE_FIELDS
 from backend.models_field_encryption import (
@@ -8,6 +8,7 @@ from backend.models_field_encryption import (
     FieldEncryptionConfig,
     FieldEncryptionStatus,
 )
+from backend.security import get_current_user
 
 router = APIRouter(prefix="/api/encryption/fields", tags=["field-encryption"])
 
@@ -46,7 +47,7 @@ def _get_nested(doc: dict, path: str):
 # ---------------------------------------------------------------------------
 
 @router.get("/status", response_model=list[FieldEncryptionStatus])
-async def encryption_status():
+async def encryption_status(current_user: dict = Depends(get_current_user)):
     """Show which collections/fields are encrypted and document counts."""
     results: list[FieldEncryptionStatus] = []
 
@@ -86,8 +87,8 @@ async def encryption_status():
     return results
 
 
-@router.post("/encrypt-collection")
-async def encrypt_collection(req: CollectionEncryptionRequest):
+@router.post("/encrypt-collection", response_model=dict)
+async def encrypt_collection(req: CollectionEncryptionRequest, current_user: dict = Depends(get_current_user)):
     """Encrypt all existing documents in a collection (migration helper)."""
     if req.collection not in SENSITIVE_FIELDS:
         raise HTTPException(
@@ -166,8 +167,8 @@ async def encrypt_collection(req: CollectionEncryptionRequest):
     }
 
 
-@router.post("/decrypt-collection")
-async def decrypt_collection(req: CollectionEncryptionRequest):
+@router.post("/decrypt-collection", response_model=dict)
+async def decrypt_collection(req: CollectionEncryptionRequest, current_user: dict = Depends(get_current_user)):
     """Decrypt all documents in a collection (migration / export helper)."""
     if req.collection not in SENSITIVE_FIELDS:
         raise HTTPException(
@@ -241,6 +242,6 @@ async def decrypt_collection(req: CollectionEncryptionRequest):
 
 
 @router.get("/config", response_model=FieldEncryptionConfig)
-async def get_config():
+async def get_config(current_user: dict = Depends(get_current_user)):
     """Show current sensitive fields configuration."""
     return FieldEncryptionConfig(sensitive_fields=SENSITIVE_FIELDS)

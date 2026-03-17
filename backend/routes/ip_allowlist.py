@@ -89,7 +89,7 @@ async def list_ips(current_user: dict = Depends(get_current_user)):
     return [IPAllowlistEntry(**e) for e in entries]
 
 
-@router.delete("/ip-allowlist/{entry_id}")
+@router.delete("/ip-allowlist/{entry_id}", response_model=dict)
 async def remove_ip(entry_id: str, current_user: dict = Depends(get_current_user)):
     """Remove an IP allowlist entry by its ID."""
     result = await db.ip_allowlist.delete_one(
@@ -107,7 +107,7 @@ async def remove_ip(entry_id: str, current_user: dict = Depends(get_current_user
     return {"message": "IP allowlist entry removed"}
 
 
-@router.get("/ip-allowlist/check")
+@router.get("/ip-allowlist/check", response_model=dict)
 async def check_ip(
     ip: str = Query(..., description="IP address to check"),
     current_user: dict = Depends(get_current_user),

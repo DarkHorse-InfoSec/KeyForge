@@ -162,11 +162,14 @@ async def update_credential(
 
     updated = await db.credentials.find_one({"id": credential_id})
 
-    preview_source = raw_key if raw_key else updated.get("api_key", "")
+    if raw_key:
+        preview = make_api_key_preview(raw_key)
+    else:
+        preview = _preview_from_encrypted(updated.get("api_key", ""))
     return CredentialResponse(
         id=updated["id"],
         api_name=updated["api_name"],
-        api_key_preview=make_api_key_preview(preview_source),
+        api_key_preview=preview,
         status=updated.get("status", "unknown"),
         last_tested=updated.get("last_tested"),
         environment=updated.get("environment", "development"),
@@ -174,7 +177,7 @@ async def update_credential(
     )
 
 
-@router.post("/credentials/{credential_id}/test")
+@router.post("/credentials/{credential_id}/test", response_model=dict)
 async def test_credential(
     credential_id: str,
     current_user: dict = Depends(get_current_user),
@@ -206,7 +209,7 @@ async def test_credential(
     }
 
 
-@router.delete("/credentials/{credential_id}")
+@router.delete("/credentials/{credential_id}", response_model=dict)
 async def delete_credential(
     credential_id: str,
     current_user: dict = Depends(get_current_user),

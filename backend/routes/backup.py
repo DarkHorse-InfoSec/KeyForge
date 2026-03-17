@@ -1,11 +1,12 @@
 """API routes for encrypted backup and disaster recovery."""
 
 import base64
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 
 from backend.config import db
 from backend.backup.manager import BackupManager
+from backend.security import get_current_user
 from backend.models_backup import (
     BackupCreate,
     BackupListResponse,
@@ -18,8 +19,8 @@ from backend.models_backup import (
 router = APIRouter(prefix="/api/backup", tags=["backup"])
 
 
-@router.post("/create", response_model=None)
-async def create_backup(body: BackupCreate):
+@router.post("/create", response_model=BackupMetadata)
+async def create_backup(body: BackupCreate, current_user: dict = Depends(get_current_user)):
     """Create a new encrypted backup of the specified (or all) collections."""
     try:
         result = await BackupManager.create_backup(
@@ -33,14 +34,14 @@ async def create_backup(body: BackupCreate):
 
 
 @router.get("/list", response_model=BackupListResponse)
-async def list_backups():
+async def list_backups(current_user: dict = Depends(get_current_user)):
     """List all backups with metadata."""
     backups = await BackupManager.list_backups(db)
     return BackupListResponse(backups=backups, total=len(backups))
 
 
-@router.post("/restore/{backup_id}")
-async def restore_backup(backup_id: str, body: BackupRestore):
+@router.post("/restore/{backup_id}", response_model=dict)
+async def restore_backup(backup_id: str, body: BackupRestore, current_user: dict = Depends(get_current_user)):
     """Restore collections from an encrypted backup."""
     # Fetch the encrypted blob
     blob_doc = await db["backup_data"].find_one({"backup_id": backup_id})
@@ -63,8 +64,8 @@ async def restore_backup(backup_id: str, body: BackupRestore):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.post("/verify/{backup_id}", response_model=None)
-async def verify_backup(backup_id: str):
+@router.post("/verify/{backup_id}", response_model=BackupVerification)
+async def verify_backup(backup_id: str, current_user: dict = Depends(get_current_user)):
     """Verify backup integrity without restoring."""
     meta = await db["backups"].find_one({"backup_id": backup_id})
     if not meta:
@@ -93,8 +94,8 @@ async def verify_backup(backup_id: str):
     return result
 
 
-@router.delete("/{backup_id}")
-async def delete_backup(backup_id: str):
+@router.delete("/{backup_id}", response_model=dict)
+async def delete_backup(backup_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a backup and its data."""
     deleted = await BackupManager.delete_backup(db, backup_id)
     if not deleted:
@@ -103,7 +104,7 @@ async def delete_backup(backup_id: str):
 
 
 @router.get("/download/{backup_id}")
-async def download_backup(backup_id: str):
+async def download_backup(backup_id: str, current_user: dict = Depends(get_current_user)):
     """Download the raw encrypted backup file."""
     blob_doc = await db["backup_data"].find_one({"backup_id": backup_id})
     if not blob_doc:
@@ -119,8 +120,8 @@ async def download_backup(backup_id: str):
     )
 
 
-@router.post("/schedule")
-async def set_schedule(body: BackupSchedule):
+@router.post("/schedule", response_model=dict)
+async def set_schedule(body: BackupSchedule, current_user: dict = Depends(get_current_user)):
     """Configure the automated backup schedule."""
     result = await BackupManager.schedule_backup(
         db,
@@ -133,8 +134,8 @@ async def set_schedule(body: BackupSchedule):
     return result
 
 
-@router.get("/schedule")
-async def get_schedule():
+@router.get("/schedule", response_model=dict)
+async def get_schedule(current_user: dict = Depends(get_current_user)):
     """Get the current backup schedule."""
     schedule = await BackupManager.get_schedule(db)
     if not schedule:

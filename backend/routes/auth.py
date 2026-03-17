@@ -9,10 +9,12 @@ try:
     from ..config import db
     from ..models import UserCreate, UserResponse
     from ..security import hash_password, verify_password, create_access_token, get_current_user
+    from ..utils.validators import validate_password
 except ImportError:
     from backend.config import db
     from backend.models import UserCreate, UserResponse
     from backend.security import hash_password, verify_password, create_access_token, get_current_user
+    from backend.utils.validators import validate_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -20,6 +22,11 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate):
     """Create a new user account."""
+    # Enforce password complexity
+    is_valid, msg = validate_password(user.password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=msg)
+
     # Check if username already exists
     existing_user = await db.users.find_one({"username": user.username})
     if existing_user:
@@ -46,7 +53,7 @@ async def register(user: UserCreate):
     )
 
 
-@router.post("/login")
+@router.post("/login", response_model=dict)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """Authenticate user and return a JWT access token."""
     user = await db.users.find_one({"username": form_data.username})

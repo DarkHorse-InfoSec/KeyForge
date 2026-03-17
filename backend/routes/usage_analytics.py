@@ -24,7 +24,7 @@ class TrackUsageRequest(BaseModel):
     action: str
 
 
-@router.post("/usage/track")
+@router.post("/usage/track", response_model=dict)
 async def track_usage(
     body: TrackUsageRequest,
     current_user: dict = Depends(get_current_user),
@@ -107,7 +107,7 @@ async def _compute_analytics_for_credential(credential: dict, user_id: str) -> d
         }
 
 
-@router.get("/usage/analytics")
+@router.get("/usage/analytics", response_model=list[dict])
 async def get_usage_analytics(
     current_user: dict = Depends(get_current_user),
 ):
@@ -124,7 +124,7 @@ async def get_usage_analytics(
     return analytics
 
 
-@router.get("/usage/analytics/{credential_id}")
+@router.get("/usage/analytics/{credential_id}", response_model=dict)
 async def get_credential_usage_analytics(
     credential_id: str,
     current_user: dict = Depends(get_current_user),
@@ -151,7 +151,7 @@ async def get_credential_usage_analytics(
     return analytics
 
 
-@router.get("/usage/idle-credentials")
+@router.get("/usage/idle-credentials", response_model=list[dict])
 async def get_idle_credentials(
     current_user: dict = Depends(get_current_user),
 ):
@@ -169,7 +169,7 @@ async def get_idle_credentials(
     return idle
 
 
-@router.get("/usage/dashboard")
+@router.get("/usage/dashboard", response_model=dict)
 async def get_usage_dashboard(
     current_user: dict = Depends(get_current_user),
 ):

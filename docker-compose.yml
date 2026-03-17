@@ -3,8 +3,10 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:7
-    ports:
-      - "27017:27017"
+    # Do not expose MongoDB to the host in production; only backend needs access.
+    # Uncomment the ports mapping below for local development only.
+    # ports:
+    #   - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     healthcheck:

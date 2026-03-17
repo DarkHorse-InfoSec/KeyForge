@@ -46,7 +46,7 @@ class AutoRotationConfigUpdate(BaseModel):
     enabled: Optional[bool] = None
 
 
-@router.post("/auto-rotation")
+@router.post("/auto-rotation", response_model=dict)
 async def configure_auto_rotation(
     data: AutoRotationConfigCreate,
     current_user: dict = Depends(get_current_user),
@@ -105,7 +105,7 @@ async def configure_auto_rotation(
     }
 
 
-@router.get("/auto-rotation")
+@router.get("/auto-rotation", response_model=list[dict])
 async def list_auto_rotation_configs(
     current_user: dict = Depends(get_current_user),
 ):
@@ -133,7 +133,7 @@ async def list_auto_rotation_configs(
     return results
 
 
-@router.put("/auto-rotation/{config_id}")
+@router.put("/auto-rotation/{config_id}", response_model=dict)
 async def update_auto_rotation_config(
     config_id: str,
     data: AutoRotationConfigUpdate,
@@ -178,7 +178,7 @@ async def update_auto_rotation_config(
     }
 
 
-@router.delete("/auto-rotation/{config_id}")
+@router.delete("/auto-rotation/{config_id}", response_model=dict)
 async def delete_auto_rotation_config(
     config_id: str,
     current_user: dict = Depends(get_current_user),
@@ -193,7 +193,7 @@ async def delete_auto_rotation_config(
     return {"message": "Auto-rotation config removed successfully"}
 
 
-@router.post("/auto-rotation/{config_id}/trigger")
+@router.post("/auto-rotation/{config_id}/trigger", response_model=dict)
 async def trigger_rotation(
     config_id: str,
     current_user: dict = Depends(get_current_user),
@@ -251,8 +251,8 @@ async def trigger_rotation(
     }
 
 
-@router.get("/auto-rotation/supported-providers")
-async def get_supported_providers():
+@router.get("/auto-rotation/supported-providers", response_model=dict)
+async def get_supported_providers(current_user: dict = Depends(get_current_user)):
     """Return list of providers that support auto-rotation with details."""
     return {
         "providers": [
