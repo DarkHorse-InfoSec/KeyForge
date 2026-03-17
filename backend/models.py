@@ -43,7 +43,24 @@ class ProjectAnalysis(BaseModel):
 
 # ── Credential models ────────────────────────────────────────────────────────
 
-ALLOWED_API_NAMES = ["openai", "stripe", "github", "supabase", "firebase", "vercel"]
+ALLOWED_API_NAMES = [
+    # Core API providers
+    "openai", "stripe", "github", "supabase", "firebase", "vercel",
+    # SSH & Signing
+    "ssh", "gpg", "jwt_signing",
+    # Database
+    "postgresql", "mysql", "redis", "mongodb_cred",
+    # Cloud IAM
+    "aws", "gcp", "azure",
+    # Infrastructure & Container Registries
+    "tls_ssl", "docker_hub", "aws_ecr", "ghcr",
+    # CI/CD
+    "github_actions", "circleci", "gitlab_ci",
+    # Encryption & OAuth
+    "encryption", "oauth_generic",
+    # Communication
+    "twilio", "sendgrid",
+]
 ALLOWED_ENVIRONMENTS = ["development", "staging", "production"]
 
 

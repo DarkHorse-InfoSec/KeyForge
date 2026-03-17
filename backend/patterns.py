@@ -4,8 +4,15 @@ import re
 from pathlib import Path
 from typing import List, Dict
 
-# API Detection Patterns
-API_PATTERNS = {
+from backend.key_types.ssh_keys import PATTERNS as SSH_PATTERNS
+from backend.key_types.signing_keys import PATTERNS as SIGNING_PATTERNS
+from backend.key_types.database_keys import DATABASE_PATTERNS
+from backend.key_types.cloud_keys import CLOUD_PATTERNS
+from backend.key_types.infra_keys import INFRA_PATTERNS
+from backend.key_types.service_keys import SERVICE_PATTERNS
+
+# API Detection Patterns — core providers
+_CORE_PATTERNS = {
     "openai": {
         "name": "OpenAI",
         "category": "AI/ML",
@@ -91,6 +98,17 @@ API_PATTERNS = {
         "auth_type": "token",
         "scopes": ["deployments", "projects", "teams"]
     }
+}
+
+# Merge all pattern sources into a single registry
+API_PATTERNS = {
+    **_CORE_PATTERNS,
+    **SSH_PATTERNS,
+    **SIGNING_PATTERNS,
+    **DATABASE_PATTERNS,
+    **CLOUD_PATTERNS,
+    **INFRA_PATTERNS,
+    **SERVICE_PATTERNS,
 }
 
 

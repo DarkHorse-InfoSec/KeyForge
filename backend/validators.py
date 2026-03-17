@@ -8,6 +8,19 @@ import time
 import requests
 from typing import Dict
 
+from backend.key_types.ssh_keys import validate_ssh_key
+from backend.key_types.signing_keys import validate_gpg_key, validate_jwt_signing_key
+from backend.key_types.database_keys import DATABASE_FORMAT_VALIDATORS
+from backend.key_types.cloud_keys import CLOUD_FORMAT_VALIDATORS
+from backend.key_types.infra_keys import (
+    FORMAT_VALIDATORS as INFRA_FORMAT_VALIDATORS,
+    LIVE_VALIDATORS as INFRA_LIVE_VALIDATORS,
+)
+from backend.key_types.service_keys import (
+    SERVICE_FORMAT_VALIDATORS,
+    SERVICE_LIVE_VALIDATORS,
+)
+
 logger = logging.getLogger("keyforge.validators")
 
 
@@ -70,7 +83,8 @@ def _validate_format_vercel(api_key: str) -> str | None:
     return None
 
 
-FORMAT_VALIDATORS = {
+# Core format validators (return error string or None)
+_CORE_FORMAT_VALIDATORS = {
     "openai": _validate_format_openai,
     "stripe": _validate_format_stripe,
     "github": _validate_format_github,
@@ -78,6 +92,23 @@ FORMAT_VALIDATORS = {
     "firebase": _validate_format_firebase,
     "vercel": _validate_format_vercel,
 }
+
+# Extended validators from key_types modules (return full dicts directly).
+# We wrap them to work with validate_credential's two-step flow.
+_DIRECT_VALIDATORS = {
+    "ssh": validate_ssh_key,
+    "gpg": validate_gpg_key,
+    "jwt_signing": validate_jwt_signing_key,
+    **DATABASE_FORMAT_VALIDATORS,
+    **CLOUD_FORMAT_VALIDATORS,
+    **INFRA_FORMAT_VALIDATORS,
+    **SERVICE_FORMAT_VALIDATORS,
+}
+
+# Merge into a unified registry. Core validators use the old error-string
+# convention; _DIRECT_VALIDATORS use the new full-dict convention. The
+# validate_credential function handles both styles.
+FORMAT_VALIDATORS = {**_CORE_FORMAT_VALIDATORS}
 
 # Providers that support live API validation
 LIVE_VALIDATION_PROVIDERS = {"openai", "stripe", "github"}
@@ -169,7 +200,26 @@ def validate_credential(api_name: str, api_key: str) -> Dict:
     """
     provider = api_name.lower()
 
-    # Step 1: Format validation
+    # Step 1a: Check direct validators (new key_types modules — return full dicts)
+    direct_validator = _DIRECT_VALIDATORS.get(provider)
+    if direct_validator is not None:
+        try:
+            result = direct_validator(api_key)
+            # If the direct validator returned "format_valid" and there's a live
+            # validator available, try it for a definitive answer.
+            if result.get("status") == "format_valid":
+                live = {**INFRA_LIVE_VALIDATORS, **SERVICE_LIVE_VALIDATORS}.get(provider)
+                if live is not None:
+                    try:
+                        return live(api_key)
+                    except Exception:
+                        pass  # Fall through to format_valid result
+            return result
+        except Exception:
+            logger.exception("Error in direct validator for %s", provider)
+            return {"status": "format_valid", "response_time": 0, "message": "Validation encountered an error"}
+
+    # Step 1b: Check core format validators (return error string or None)
     format_validator = FORMAT_VALIDATORS.get(provider)
     if format_validator is None:
         # Unknown provider — can only do a basic length check
