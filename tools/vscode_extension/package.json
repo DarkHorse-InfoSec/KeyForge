@@ -1,0 +1,25 @@
+{
+  "name": "keyforge-vscode",
+  "displayName": "KeyForge",
+  "description": "Manage API keys and credentials from VS Code",
+  "version": "1.0.0",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:keyforge.listCredentials"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "keyforge.listCredentials", "title": "KeyForge: List Credentials" },
+      { "command": "keyforge.pullEnv", "title": "KeyForge: Pull .env File" },
+      { "command": "keyforge.scanSecrets", "title": "KeyForge: Scan Current File for Secrets" },
+      { "command": "keyforge.testCredential", "title": "KeyForge: Test Credential" }
+    ],
+    "configuration": {
+      "title": "KeyForge",
+      "properties": {
+        "keyforge.apiUrl": { "type": "string", "default": "http://localhost:8001", "description": "KeyForge API URL" },
+        "keyforge.token": { "type": "string", "default": "", "description": "Auth token" }
+      }
+    }
+  }
+}

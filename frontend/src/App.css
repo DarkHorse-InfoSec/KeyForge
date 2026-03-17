@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.App {
+  @apply min-h-screen bg-gray-50;
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Form styling enhancements */
+input:focus,
+select:focus,
+textarea:focus {
+  @apply ring-2 ring-indigo-500 ring-opacity-50;
+}
+
+/* Button hover animations */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Status indicator animations */
+.status-indicator {
+  @apply inline-block w-3 h-3 rounded-full;
+  animation: pulse 2s infinite;
+}
+
+.status-active {
+  @apply bg-green-500;
+}
+
+.status-inactive {
+  @apply bg-red-500;
+}
+
+.status-warning {
+  @apply bg-yellow-500;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading states */
+.loading-skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* File upload styling */
+input[type="file"] {
+  @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100;
+}
+
+/* API detection confidence bars */
+.confidence-bar {
+  @apply relative bg-gray-200 rounded-full h-2 overflow-hidden;
+}
+
+.confidence-fill {
+  @apply h-full transition-all duration-500 ease-out;
+}
+
+.confidence-high {
+  @apply bg-green-500;
+}
+
+.confidence-medium {
+  @apply bg-yellow-500;
+}
+
+.confidence-low {
+  @apply bg-red-500;
+}
+
+/* Navigation active states */
+.nav-active {
+  @apply relative;
+}
+
+.nav-active::after {
+  content: '';
+  @apply absolute -bottom-1 left-0 right-0 h-0.5 bg-indigo-600 rounded-full;
+}
+
+/* Dashboard metrics cards */
+.metric-card {
+  @apply bg-white rounded-lg shadow-sm p-6 border border-gray-100 transition-all duration-200;
+}
+
+.metric-card:hover {
+  @apply shadow-md border-gray-200;
+}
+
+/* Responsive typography */
+@screen sm {
+  h1 { @apply text-3xl; }
+  h2 { @apply text-2xl; }
+  h3 { @apply text-xl; }
+}
+
+@screen lg {
+  h1 { @apply text-4xl; }
+  h2 { @apply text-3xl; }
+  h3 { @apply text-2xl; }
+}
+
+/* Dark mode base styles */
+.dark {
+  background-color: #111827;
+  color: #f3f4f6;
+}
+.dark .bg-white { background-color: #1f2937; }
+.dark .bg-gray-50 { background-color: #111827; }
+.dark .bg-gray-100 { background-color: #374151; }
+.dark .text-gray-900 { color: #f9fafb; }
+.dark .text-gray-800 { color: #f3f4f6; }
+.dark .text-gray-700 { color: #e5e7eb; }
+.dark .text-gray-600 { color: #d1d5db; }
+.dark .text-gray-500 { color: #9ca3af; }
+.dark .border-gray-200 { border-color: #4b5563; }
+.dark .border-gray-300 { border-color: #4b5563; }
+.dark .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3); }
+.dark .border-b { border-color: #374151; }
+.dark input, .dark select, .dark textarea {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f3f4f6;
+}
+.dark .hover\:bg-gray-100:hover { background-color: #374151; }
+.dark .hover\:bg-gray-50:hover { background-color: #1f2937; }
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background-color: #1f2937;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-after: always;
+  }
+}
