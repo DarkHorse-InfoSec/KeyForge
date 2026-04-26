@@ -1,26 +1,48 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import FirstRunWizard from "./FirstRunWizard";
 
 const Dashboard = ({ api }) => {
   const [overview, setOverview] = useState(null);
+  const [credentials, setCredentials] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [wizardDismissed, setWizardDismissed] = useState(() => {
+    try {
+      return localStorage.getItem('keyforge_wizard_dismissed') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
-  useEffect(() => {
-    fetchOverview();
-  }, []);
-
-  const fetchOverview = async () => {
+  const fetchOverview = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get('/dashboard/overview');
-      setOverview(response.data);
+      const [overviewRes, credsRes] = await Promise.all([
+        api.get('/dashboard/overview'),
+        api.get('/credentials'),
+      ]);
+      setOverview(overviewRes.data);
+      setCredentials(Array.isArray(credsRes.data) ? credsRes.data : []);
     } catch (err) {
       const message = err.response?.data?.detail || err.message || 'Failed to load dashboard data.';
       setError(message);
     } finally {
       setLoading(false);
     }
+  }, [api]);
+
+  useEffect(() => {
+    fetchOverview();
+  }, [fetchOverview]);
+
+  const handleWizardComplete = () => {
+    try {
+      setWizardDismissed(localStorage.getItem('keyforge_wizard_dismissed') === 'true');
+    } catch (e) {
+      // ignore
+    }
+    fetchOverview();
   };
 
   if (loading) {
@@ -56,6 +78,14 @@ const Dashboard = ({ api }) => {
         </div>
       </div>
     );
+  }
+
+  if (
+    credentials !== null &&
+    credentials.length === 0 &&
+    !wizardDismissed
+  ) {
+    return <FirstRunWizard api={api} onComplete={handleWizardComplete} />;
   }
 
   return (
