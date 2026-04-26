@@ -114,8 +114,8 @@ async def mfa_disable(body: MFAVerify, current_user: dict = Depends(get_current_
         {"username": current_user["username"]},
         {
             "$unset": {
-                "mfa_secret": "",
-                "mfa_secret_plain": "",
+                "mfa_secret": "",  # nosec B105  # reason: Mongo $unset value must be empty string; field name, not credential
+                "mfa_secret_plain": "",  # nosec B105  # reason: Mongo $unset value must be empty string; field name, not credential
                 "mfa_backup_codes": "",
                 "mfa_enabled_at": "",
             }

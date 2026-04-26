@@ -351,18 +351,18 @@ def _derive_env_var_name(secret: Dict) -> str:
         "stripe_live_key": "STRIPE_SECRET_KEY",
         "sendgrid_api_key": "SENDGRID_API_KEY",
         "twilio_api_key": "TWILIO_API_KEY",
-        "slack_token": "SLACK_TOKEN",
+        "slack_token": "SLACK_TOKEN",  # nosec B105  # reason: env var name suggested for the scanned secret type, not a credential
         "google_api_key": "GOOGLE_API_KEY",
         "github_oauth": "GITHUB_CLIENT_SECRET",
         "supabase_key": "SUPABASE_ANON_KEY",
         "hardcoded_api_key": "API_KEY",
-        "hardcoded_password": "PASSWORD",
-        "hardcoded_secret": "SECRET_KEY",
-        "hardcoded_token": "AUTH_TOKEN",
+        "hardcoded_password": "PASSWORD",  # nosec B105  # reason: env var name suggested for the scanned secret type, not a credential
+        "hardcoded_secret": "SECRET_KEY",  # nosec B105  # reason: env var name suggested for the scanned secret type, not a credential
+        "hardcoded_token": "AUTH_TOKEN",  # nosec B105  # reason: env var name suggested for the scanned secret type, not a credential
         "hardcoded_database_url": "DATABASE_URL",
-        "connection_string_password": "DATABASE_URL",
+        "connection_string_password": "DATABASE_URL",  # nosec B105  # reason: env var name suggested for the scanned secret type, not a credential
         "private_key": "PRIVATE_KEY_PATH",
-        "env_variable_secret": "SECRET",
+        "env_variable_secret": "SECRET",  # nosec B105  # reason: env var name suggested for the scanned secret type, not a credential
     }
     return type_to_env.get(secret.get("type", ""), "SECRET_VALUE")
 

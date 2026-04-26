@@ -247,7 +247,9 @@ def validate_credential(api_name: str, api_key: str) -> Dict:
                 if live is not None:
                     try:
                         return live(api_key)
-                    except Exception:
+                    except (
+                        Exception
+                    ):  # nosec B110  # reason: live validator failure must not mask the format_valid result we already have
                         pass  # Fall through to format_valid result
             return result
         except Exception:

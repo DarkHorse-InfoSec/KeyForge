@@ -96,7 +96,9 @@ class SanitizationMiddleware(BaseHTTPMiddleware):
                 check_xss(value, path="query_value")
         except HTTPException:
             raise
-        except Exception:
+        except (
+            Exception
+        ):  # nosec B110  # reason: sanitiser must never crash the request; HTTPException is rethrown above
             pass  # Don't block on sanitization errors
 
         if request.method in ("POST", "PUT", "PATCH"):
@@ -112,7 +114,9 @@ class SanitizationMiddleware(BaseHTTPMiddleware):
                     pass  # Let FastAPI handle invalid JSON
                 except HTTPException:
                     raise
-                except Exception:
+                except (
+                    Exception
+                ):  # nosec B110  # reason: sanitiser must never crash the request; HTTPException is rethrown above
                     pass  # Don't block on sanitization errors
 
         return await call_next(request)

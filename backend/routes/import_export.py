@@ -16,27 +16,27 @@ router = APIRouter(prefix="/api", tags=["import-export"])
 
 ENV_KEY_TO_API_NAME = {
     "OPENAI_API_KEY": "openai",
-    "STRIPE_SECRET_KEY": "stripe",
-    "STRIPE_PUBLISHABLE_KEY": "stripe",
-    "GITHUB_TOKEN": "github",
-    "GITHUB_CLIENT_SECRET": "github",
+    "STRIPE_SECRET_KEY": "stripe",  # nosec B105  # reason: provider tag, not a credential
+    "STRIPE_PUBLISHABLE_KEY": "stripe",  # nosec B105  # reason: provider tag, not a credential
+    "GITHUB_TOKEN": "github",  # nosec B105  # reason: provider tag, not a credential
+    "GITHUB_CLIENT_SECRET": "github",  # nosec B105  # reason: provider tag, not a credential
     "SUPABASE_ANON_KEY": "supabase",
     "FIREBASE_API_KEY": "firebase",
-    "VERCEL_TOKEN": "vercel",
+    "VERCEL_TOKEN": "vercel",  # nosec B105  # reason: provider tag, not a credential
     "AWS_ACCESS_KEY_ID": "aws",
-    "AWS_SECRET_ACCESS_KEY": "aws",
+    "AWS_SECRET_ACCESS_KEY": "aws",  # nosec B105  # reason: provider tag, not a credential
     "DATABASE_URL": "postgresql",
-    "POSTGRES_PASSWORD": "postgresql",
-    "MYSQL_PASSWORD": "mysql",
+    "POSTGRES_PASSWORD": "postgresql",  # nosec B105  # reason: provider tag, not a credential
+    "MYSQL_PASSWORD": "mysql",  # nosec B105  # reason: provider tag, not a credential
     "REDIS_URL": "redis",
     "MONGO_URI": "mongodb_cred",
-    "TWILIO_AUTH_TOKEN": "twilio",
+    "TWILIO_AUTH_TOKEN": "twilio",  # nosec B105  # reason: provider tag, not a credential
     "SENDGRID_API_KEY": "sendgrid",
-    "DOCKER_TOKEN": "docker_hub",
-    "AZURE_CLIENT_SECRET": "azure",
+    "DOCKER_TOKEN": "docker_hub",  # nosec B105  # reason: provider tag, not a credential
+    "AZURE_CLIENT_SECRET": "azure",  # nosec B105  # reason: provider tag, not a credential
     "GCP_SERVICE_ACCOUNT_KEY": "gcp",
     "ENCRYPTION_KEY": "encryption",
-    "JWT_SECRET": "jwt_signing",
+    "JWT_SECRET": "jwt_signing",  # nosec B105  # reason: provider tag, not a credential
     "SSH_PRIVATE_KEY": "ssh",
 }
 

@@ -34,11 +34,17 @@ def encrypt_api_key(plain_key: str) -> str:
 
 
 def decrypt_api_key(encrypted_key: str) -> str:
-    """Decrypt a Fernet token back to plaintext. Returns a placeholder on failure."""
+    """Decrypt a Fernet token back to plaintext. Returns a placeholder on failure.
+
+    Failures are logged WITHOUT the underlying exception text. The Fernet
+    library can echo ciphertext fragments in its exceptions, and propagating
+    those into the log is a leak risk. The audit trail records the fact of a
+    failed decrypt; the specifics stay out of the logs.
+    """
     try:
         return _fernet.decrypt(encrypted_key.encode()).decode()
-    except (InvalidToken, Exception) as exc:
-        logger.warning("Decryption failed: %s", exc)
+    except (InvalidToken, Exception):
+        logger.warning("Decryption failed (no further detail logged for security)")
         return "[decryption failed]"
 
 

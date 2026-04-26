@@ -353,7 +353,9 @@ class GitHubIssuer(CredentialIssuer):
             return
 
         token = decrypt_api_key(encrypted)
-        if not token or token == "[decryption failed]":
+        # nosec sentinel: decrypt_api_key returns "[decryption failed]" on failure; not a hardcoded credential.
+        decrypt_failed_sentinel = "[decryption failed]"  # nosec B105
+        if not token or token == decrypt_failed_sentinel:
             logger.info("Revoke skipped: credential %s could not be decrypted", credential_id)
             return
 

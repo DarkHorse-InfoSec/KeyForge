@@ -86,7 +86,7 @@ def validate_url(url: str) -> bool:
     _blocked = (
         "localhost",
         "127.0.0.1",
-        "0.0.0.0",
+        "0.0.0.0",  # nosec B104  # reason: SSRF denylist entry, not a bind address
         "::1",
         "169.254.169.254",  # AWS metadata
         "metadata.google.internal",  # GCP metadata
@@ -158,7 +158,7 @@ def _validate_cron_token(token: str, lo: int, hi: int) -> bool:
         return _validate_cron_range(base, lo, hi)
 
     # Wildcard
-    if token == "*":
+    if token == "*":  # nosec B105  # reason: cron wildcard literal, not a credential
         return True
 
     return _validate_cron_range(token, lo, hi)

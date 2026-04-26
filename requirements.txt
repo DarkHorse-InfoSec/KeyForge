@@ -6,7 +6,9 @@ fastapi==0.110.1
 uvicorn>=0.24.0
 starlette==0.37.2
 pydantic>=2.5.0
-python-multipart>=0.0.6
+# python-multipart 0.0.18+ fixes CVE-2024-53981 (multipart CRLF DoS) and
+# 0.0.22+ fixes CVE-2026-24486 (path traversal when UPLOAD_KEEP_FILENAME=True).
+python-multipart>=0.0.22
 
 # Database
 motor>=3.3.0

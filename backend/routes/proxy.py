@@ -73,7 +73,7 @@ async def list_proxy_tokens(
 
     items = [
         ProxyTokenResponse(
-            proxy_token="[redacted]",
+            proxy_token="[redacted]",  # nosec B106  # reason: literal redaction placeholder, not a real token
             token_id=t["token_id"],
             credential_id=t["credential_id"],
             expires_at=t["expires_at"],
