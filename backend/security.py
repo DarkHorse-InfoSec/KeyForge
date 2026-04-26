@@ -5,7 +5,7 @@ import warnings
 from datetime import datetime, timedelta, timezone
 
 from cryptography.fernet import Fernet, InvalidToken
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -102,11 +102,32 @@ def decode_access_token(token: str) -> dict:
 # ── FastAPI dependency ──────────────────────────────────────────────────────
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
-    """Decode the bearer token, look up the user in MongoDB, and return it.
+COOKIE_NAME = "keyforge_token"
 
-    Raises HTTP 401 if the token is invalid or the user no longer exists.
-    """
+
+def _extract_token(request: Request) -> str:
+    """Return the JWT from the cookie (preferred) or Authorization header."""
+    cookie_token = request.cookies.get(COOKIE_NAME)
+    if cookie_token:
+        return cookie_token
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        return auth_header[7:].strip()
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def get_current_token(request: Request) -> str:
+    """FastAPI dependency: return the raw JWT string from cookie or header."""
+    return _extract_token(request)
+
+
+async def get_current_user(request: Request) -> dict:
+    """Decode the JWT (from cookie or Authorization header) and load the user."""
+    token = _extract_token(request)
     payload = decode_access_token(token)
     username: str | None = payload.get("sub")
     if username is None:

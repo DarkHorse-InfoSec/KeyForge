@@ -18,20 +18,20 @@ const AuthScreen = ({ api, onAuth }) => {
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
-        const response = await api.post('/auth/login', formData, {
+        await api.post('/auth/login', formData, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
-        onAuth(response.data.access_token);
+        onAuth();
       } else {
         // Register with JSON, then auto-login
         await api.post('/auth/register', { username, password });
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
-        const response = await api.post('/auth/login', formData, {
+        await api.post('/auth/login', formData, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
-        onAuth(response.data.access_token);
+        onAuth();
       }
     } catch (err) {
       const detail = err.response?.data?.detail;

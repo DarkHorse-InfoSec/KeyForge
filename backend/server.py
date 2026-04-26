@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import backend.migrations.versions  # noqa: E402, F401 - register migrations
 from backend.config import client, db  # noqa: E402
+from backend.middleware.csrf import CSRFMiddleware  # noqa: E402
 from backend.middleware.error_handler import generic_exception_handler  # noqa: E402
 from backend.middleware.error_handler import (  # noqa: E402
     http_exception_handler,
@@ -294,6 +295,8 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(MonitoringMiddleware)
 # Rate limiting before request processing
 app.add_middleware(RateLimitMiddleware)
+# CSRF (double-submit cookie) for browser sessions on mutating /api/ requests
+app.add_middleware(CSRFMiddleware)
 # Input sanitization for JSON bodies
 app.add_middleware(SanitizationMiddleware)
 

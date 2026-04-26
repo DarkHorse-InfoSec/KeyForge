@@ -34,16 +34,21 @@ import ExpirationPolicy from "./components/ExpirationPolicy";
 import FieldEncryption from "./components/FieldEncryption";
 
 function App() {
-  const [token, setToken] = useState(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
   const [analysis, setAnalysis] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('keyforge_token');
-    if (storedToken) setToken(storedToken);
+    let cancelled = false;
+    api.get('/auth/me')
+      .then(() => { if (!cancelled) setLoggedIn(true); })
+      .catch(() => { if (!cancelled) setLoggedIn(false); })
+      .finally(() => { if (!cancelled) setAuthChecked(true); });
     const storedDark = localStorage.getItem('keyforge_dark_mode');
     if (storedDark === 'true') setDarkMode(true);
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -55,17 +60,24 @@ function App() {
     }
   }, [darkMode]);
 
-  const handleAuth = (newToken) => {
-    localStorage.setItem('keyforge_token', newToken);
-    setToken(newToken);
+  const handleAuth = () => {
+    setLoggedIn(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('keyforge_token');
-    setToken(null);
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {
+      // ignore
+    }
+    setLoggedIn(false);
   };
 
-  if (!token) {
+  if (!authChecked) {
+    return null;
+  }
+
+  if (!loggedIn) {
     return <AuthScreen api={api} onAuth={handleAuth} />;
   }
 
