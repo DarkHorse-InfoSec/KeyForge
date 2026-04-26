@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from backend.config import db, logger
 from backend.models_security import SessionInfo, SessionResponse
-from backend.security import get_current_user, oauth2_scheme
+from backend.security import get_current_token, get_current_user
 
 router = APIRouter(prefix="/api", tags=["sessions"])
 
@@ -29,7 +29,7 @@ class RecordSessionRequest(BaseModel):
 async def list_sessions(
     request: Request,
     current_user: dict = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_current_token),
 ):
     """List all active sessions for the current user.
 
@@ -59,7 +59,7 @@ async def list_sessions(
 async def revoke_session(
     session_id: str,
     current_user: dict = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_current_token),
 ):
     """Revoke (deactivate) a specific session. Cannot revoke the current session."""
     current_token_hash = _hash_token(token)
@@ -84,7 +84,7 @@ async def revoke_session(
 @router.delete("/sessions", response_model=dict)
 async def revoke_all_sessions(
     current_user: dict = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_current_token),
 ):
     """Revoke all active sessions except the current one (logout everywhere else)."""
     current_token_hash = _hash_token(token)

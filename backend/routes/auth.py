@@ -1,15 +1,18 @@
 """Authentication routes for KeyForge."""
 
+import os
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 try:
     from ..config import db
     from ..models import UserCreate, UserResponse
     from ..security import (
+        ACCESS_TOKEN_EXPIRE_MINUTES,
+        COOKIE_NAME,
         create_access_token,
         get_current_user,
         hash_password,
@@ -20,6 +23,8 @@ except ImportError:
     from backend.config import db
     from backend.models import UserCreate, UserResponse
     from backend.security import (
+        ACCESS_TOKEN_EXPIRE_MINUTES,
+        COOKIE_NAME,
         create_access_token,
         get_current_user,
         hash_password,
@@ -28,6 +33,11 @@ except ImportError:
     from backend.utils.validators import validate_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+def _cookie_secure() -> bool:
+    """Return True unless KEYFORGE_COOKIE_SECURE is explicitly 'false' (for HTTP dev)."""
+    return os.environ.get("KEYFORGE_COOKIE_SECURE", "true").lower() != "false"
 
 
 @router.post("/register", response_model=UserResponse)
@@ -62,8 +72,8 @@ async def register(user: UserCreate):
 
 
 @router.post("/login", response_model=dict)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Authenticate user and return a JWT access token."""
+async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
+    """Authenticate user, set httpOnly cookie, and return a JWT access token in the body."""
     user = await db.users.find_one({"username": form_data.username})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -72,7 +82,23 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     access_token = create_access_token(data={"sub": user["username"]})
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=True,
+        secure=_cookie_secure(),
+        samesite="lax",
+        path="/",
+    )
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout", response_model=dict)
+async def logout(response: Response):
+    """Clear the auth cookie. Body-token clients can simply discard their token."""
+    response.delete_cookie(COOKIE_NAME, path="/")
+    return {"status": "ok"}
 
 
 @router.get("/me", response_model=UserResponse)
