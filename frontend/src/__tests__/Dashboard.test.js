@@ -3,9 +3,51 @@ import Dashboard from '../components/Dashboard';
 
 describe('Dashboard', () => {
   let mockApi;
+  let storage;
+
+  // Helper to build a get() that matches both /dashboard/overview and /credentials.
+  const makeGet = ({ overview, credentials, overviewError, credsError }) =>
+    jest.fn((url) => {
+      if (url === '/dashboard/overview') {
+        if (overviewError) {
+          return Promise.reject(overviewError);
+        }
+        return Promise.resolve({ data: overview });
+      }
+      if (url === '/credentials') {
+        if (credsError) {
+          return Promise.reject(credsError);
+        }
+        return Promise.resolve({ data: credentials || [] });
+      }
+      if (url === '/issuers/github/installations') {
+        return Promise.resolve({ data: { installations: [] } });
+      }
+      return Promise.resolve({ data: {} });
+    });
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    storage = {};
+    const localStorageMock = {
+      getItem: jest.fn((k) => (k in storage ? storage[k] : null)),
+      setItem: jest.fn((k, v) => {
+        storage[k] = String(v);
+      }),
+      removeItem: jest.fn((k) => {
+        delete storage[k];
+      }),
+      clear: jest.fn(() => {
+        storage = {};
+      }),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+      configurable: true,
+    });
+
     mockApi = {
       get: jest.fn(),
       post: jest.fn().mockResolvedValue({ data: {} }),
@@ -14,6 +56,11 @@ describe('Dashboard', () => {
     };
   });
 
+  // Sample non-empty credential list used to keep the metric-card path active.
+  const sampleCredentials = [
+    { id: 'c1', api_name: 'openai', status: 'active', environment: 'production' },
+  ];
+
   test('renders loading state initially', () => {
     mockApi.get.mockReturnValue(new Promise(() => {})); // Never resolves
     render(<Dashboard api={mockApi} />);
@@ -21,8 +68,8 @@ describe('Dashboard', () => {
   });
 
   test('displays stats after loading', async () => {
-    mockApi.get.mockResolvedValueOnce({
-      data: {
+    mockApi.get = makeGet({
+      overview: {
         total_credentials: 12,
         status_breakdown: {
           active: 8,
@@ -31,6 +78,7 @@ describe('Dashboard', () => {
         },
         health_score: 85,
       },
+      credentials: sampleCredentials,
     });
 
     render(<Dashboard api={mockApi} />);
@@ -48,8 +96,9 @@ describe('Dashboard', () => {
   });
 
   test('shows error state on API failure', async () => {
-    mockApi.get.mockRejectedValueOnce({
-      response: { data: { detail: 'Server error occurred' } },
+    mockApi.get = makeGet({
+      overviewError: { response: { data: { detail: 'Server error occurred' } } },
+      credentials: sampleCredentials,
     });
 
     render(<Dashboard api={mockApi} />);
@@ -61,7 +110,10 @@ describe('Dashboard', () => {
   });
 
   test('shows generic error message when no detail provided', async () => {
-    mockApi.get.mockRejectedValueOnce(new Error('Network Error'));
+    mockApi.get = makeGet({
+      overviewError: new Error('Network Error'),
+      credentials: sampleCredentials,
+    });
 
     render(<Dashboard api={mockApi} />);
 
@@ -71,24 +123,33 @@ describe('Dashboard', () => {
   });
 
   test('retry button works after error', async () => {
-    // First call fails
-    mockApi.get.mockRejectedValueOnce({
-      response: { data: { detail: 'Temporary failure' } },
+    let firstCall = true;
+    mockApi.get = jest.fn((url) => {
+      if (url === '/dashboard/overview') {
+        if (firstCall) {
+          firstCall = false;
+          return Promise.reject({
+            response: { data: { detail: 'Temporary failure' } },
+          });
+        }
+        return Promise.resolve({
+          data: {
+            total_credentials: 5,
+            status_breakdown: { active: 3, invalid: 1, expired: 0 },
+            health_score: 90,
+          },
+        });
+      }
+      if (url === '/credentials') {
+        return Promise.resolve({ data: sampleCredentials });
+      }
+      return Promise.resolve({ data: {} });
     });
 
     render(<Dashboard api={mockApi} />);
 
     await waitFor(() => {
       expect(screen.getByText('Temporary failure')).toBeInTheDocument();
-    });
-
-    // Set up successful response for retry
-    mockApi.get.mockResolvedValueOnce({
-      data: {
-        total_credentials: 5,
-        status_breakdown: { active: 3, invalid: 1, expired: 0 },
-        health_score: 90,
-      },
     });
 
     fireEvent.click(screen.getByText('Retry'));
@@ -103,5 +164,44 @@ describe('Dashboard', () => {
     mockApi.get.mockReturnValue(new Promise(() => {}));
     render(<Dashboard api={mockApi} />);
     expect(mockApi.get).toHaveBeenCalledWith('/dashboard/overview');
+  });
+
+  test('renders FirstRunWizard when there are no credentials', async () => {
+    mockApi.get = makeGet({
+      overview: {
+        total_credentials: 0,
+        status_breakdown: { active: 0, invalid: 0, expired: 0 },
+        health_score: 0,
+      },
+      credentials: [],
+    });
+
+    render(<Dashboard api={mockApi} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome to KeyForge')).toBeInTheDocument();
+    });
+    // The metric cards should NOT render in this path.
+    expect(screen.queryByText('Total Credentials')).not.toBeInTheDocument();
+  });
+
+  test('does not render the wizard when it has been dismissed previously', async () => {
+    storage['keyforge_wizard_dismissed'] = 'true';
+
+    mockApi.get = makeGet({
+      overview: {
+        total_credentials: 0,
+        status_breakdown: { active: 0, invalid: 0, expired: 0 },
+        health_score: 0,
+      },
+      credentials: [],
+    });
+
+    render(<Dashboard api={mockApi} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Total Credentials')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Welcome to KeyForge')).not.toBeInTheDocument();
   });
 });
