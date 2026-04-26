@@ -1,12 +1,11 @@
 """Integration tests for authentication routes (/api/auth/*)."""
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock
+
 from fastapi.testclient import TestClient
 
 from tests._test_helpers import MOCK_DB, app, make_token
-
 
 # Stored user document returned by find_one for login / me
 _FAKE_USER_DOC = {
@@ -84,6 +83,7 @@ class TestLogin:
     def test_login_success(self):
         """Successful login returns an access_token."""
         from backend.security import hash_password
+
         hashed = hash_password("Correct1!pw")
         user_doc = {**_FAKE_USER_DOC, "hashed_password": hashed}
         MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
@@ -101,6 +101,7 @@ class TestLogin:
     def test_login_wrong_password(self):
         """Wrong password returns 401."""
         from backend.security import hash_password
+
         hashed = hash_password("Correct1!pw")
         user_doc = {**_FAKE_USER_DOC, "hashed_password": hashed}
         MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
@@ -158,5 +159,89 @@ class TestMe:
         resp = client.get(
             "/api/auth/me",
             headers={"Authorization": "Bearer not-a-real-jwt-token"},
+        )
+        assert resp.status_code == 401
+
+
+# ── Change-password tests ─────────────────────────────────────────────────
+
+
+class TestChangePassword:
+    """POST /api/auth/change-password"""
+
+    def _user_with(self, plaintext_password):
+        from backend.security import hash_password
+
+        return {**_FAKE_USER_DOC, "hashed_password": hash_password(plaintext_password)}
+
+    def test_change_password_success(self):
+        """Valid old password + strong new password updates the hash."""
+        user_doc = self._user_with("Correct1!pw")
+        MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
+        MOCK_DB.users.update_one = AsyncMock()
+
+        token = make_token("testuser")
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/api/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"old_password": "Correct1!pw", "new_password": "NewStrong1!pw"},
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json() == {"status": "ok"}
+        MOCK_DB.users.update_one.assert_called_once()
+        # Verify the new hash was the value written.
+        call_args = MOCK_DB.users.update_one.call_args
+        update_doc = call_args.args[1] if len(call_args.args) > 1 else call_args.kwargs["update"]
+        assert "hashed_password" in update_doc["$set"]
+        assert update_doc["$set"]["hashed_password"] != user_doc["hashed_password"]
+
+    def test_change_password_wrong_old_password(self):
+        """Wrong old password returns 400 and does not write."""
+        user_doc = self._user_with("Correct1!pw")
+        MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
+        MOCK_DB.users.update_one = AsyncMock()
+
+        token = make_token("testuser")
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/api/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"old_password": "Wrong1!pwd", "new_password": "NewStrong1!pw"},
+        )
+        assert resp.status_code == 400
+        body = resp.json()
+        msg = body.get("detail", body.get("message", "")).lower()
+        assert "old password" in msg
+        MOCK_DB.users.update_one.assert_not_called()
+
+    def test_change_password_weak_new_password(self):
+        """Weak new password returns 400 with the validator's message."""
+        user_doc = self._user_with("Correct1!pw")
+        MOCK_DB.users.find_one = AsyncMock(return_value=user_doc)
+        MOCK_DB.users.update_one = AsyncMock()
+
+        token = make_token("testuser")
+        client = TestClient(app, raise_server_exceptions=False)
+        # Long enough to clear pydantic min_length=8 but missing uppercase /
+        # digits / specials, so validate_password rejects it.
+        resp = client.post(
+            "/api/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"old_password": "Correct1!pw", "new_password": "alllowercase"},
+        )
+        assert resp.status_code == 400
+        body = resp.json()
+        msg = body.get("detail", body.get("message", "")).lower()
+        assert "uppercase" in msg or "digit" in msg or "special" in msg
+        MOCK_DB.users.update_one.assert_not_called()
+
+    def test_change_password_requires_auth(self):
+        """Bearer-only path with a bogus token returns 401 (CSRF skipped for Bearer)."""
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/api/auth/change-password",
+            headers={"Authorization": "Bearer not.a.real.jwt"},
+            json={"old_password": "anything", "new_password": "NewStrong1!pw"},
         )
         assert resp.status_code == 401

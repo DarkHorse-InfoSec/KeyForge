@@ -1,18 +1,18 @@
 """Comprehensive tests for backend.security - encryption, password hashing, JWT."""
 
-import pytest
 from datetime import timedelta
+
+import pytest
 from fastapi import HTTPException
 
 from backend.security import (
-    encrypt_api_key,
-    decrypt_api_key,
-    hash_password,
-    verify_password,
     create_access_token,
     decode_access_token,
+    decrypt_api_key,
+    encrypt_api_key,
+    hash_password,
+    verify_password,
 )
-
 
 # ── Fernet encryption / decryption ──────────────────────────────────────────
 
@@ -37,6 +37,26 @@ class TestEncryption:
     def test_decrypt_garbage_returns_placeholder(self):
         result = decrypt_api_key("not-a-valid-fernet-token")
         assert result == "[decryption failed]"
+
+    def test_decrypt_failure_does_not_log_exception_text(self, caplog):
+        """Failed decrypt logs a generic message; never the underlying exception."""
+        import logging
+
+        caplog.set_level(logging.WARNING, logger="keyforge")
+        # Garbage that will trip both InvalidToken and binascii errors.
+        decrypt_api_key("totally-not-a-fernet-token-XYZ123")
+        records = [r for r in caplog.records if "Decryption failed" in r.getMessage()]
+        assert records, "expected a 'Decryption failed' log entry"
+        for record in records:
+            msg = record.getMessage()
+            # The pre-fix log line was 'Decryption failed: <exc>' where <exc>
+            # could echo ciphertext. After the fix, no exception details and
+            # nothing matching the cryptography library's typical error text.
+            assert "InvalidToken" not in msg
+            assert "binascii" not in msg
+            assert "Incorrect padding" not in msg
+            # No raw user input should be reflected back into the log.
+            assert "totally-not-a-fernet-token-XYZ123" not in msg
 
     def test_decrypt_empty_string_returns_placeholder(self):
         result = decrypt_api_key("")

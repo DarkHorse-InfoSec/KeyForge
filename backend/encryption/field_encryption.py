@@ -107,7 +107,9 @@ class FieldEncryptor:
             if value is not None and isinstance(value, str):
                 try:
                     self._set_nested(result, field_path, self.decrypt_field(value))
-                except Exception:
+                except (
+                    Exception
+                ):  # nosec B110  # reason: best-effort decrypt; legacy plaintext rows must pass through unchanged
                     # Field may not actually be encrypted - leave it as-is.
                     pass
         return result

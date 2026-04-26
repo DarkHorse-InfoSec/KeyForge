@@ -43,7 +43,7 @@ _DEFAULT_INJECTION = {"method": "bearer"}
 class ProxyTokenManager:
     """Create, validate, revoke, and clean up short-lived proxy tokens."""
 
-    PROXY_TOKEN_COLLECTION = "proxy_tokens"
+    PROXY_TOKEN_COLLECTION = "proxy_tokens"  # nosec B105  # reason: Mongo collection name, not a credential
 
     # ── create ──────────────────────────────────────────────────────────────
 

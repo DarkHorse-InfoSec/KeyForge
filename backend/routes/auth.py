@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, Field
 
 try:
     from ..config import db
@@ -31,6 +32,14 @@ except ImportError:
         verify_password,
     )
     from backend.utils.validators import validate_password
+
+
+class ChangePasswordRequest(BaseModel):
+    """Body for POST /api/auth/change-password."""
+
+    old_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8)
+
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -91,7 +100,10 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         samesite="lax",
         path="/",
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }  # nosec B105  # reason: OAuth2 token-type label, not a credential
 
 
 @router.post("/logout", response_model=dict)
@@ -109,3 +121,31 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         username=current_user["username"],
         created_at=current_user["created_at"],
     )
+
+
+@router.post("/change-password", response_model=dict)
+async def change_password(
+    payload: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Change the authenticated user's password.
+
+    Verifies the old password matches, runs the new password through the same
+    complexity validator the registration endpoint uses, then writes the new
+    bcrypt hash. Returns 400 on weak passwords or wrong old password (without
+    leaking which one was wrong is unnecessary; the user already proved they
+    own the session, so an explicit message is fine).
+    """
+    if not verify_password(payload.old_password, current_user["hashed_password"]):
+        raise HTTPException(status_code=400, detail="Old password is incorrect")
+
+    is_valid, msg = validate_password(payload.new_password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=msg)
+
+    new_hash = hash_password(payload.new_password)
+    await db.users.update_one(
+        {"username": current_user["username"]},
+        {"$set": {"hashed_password": new_hash}},
+    )
+    return {"status": "ok"}

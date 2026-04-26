@@ -53,9 +53,15 @@ async def add_phase5_indexes(db):
 @migration(4, "add_mfa_fields_to_users")
 async def add_mfa_fields(db):
     """Ensure user documents have MFA-related fields."""
+    # nosec note: "mfa_secret" below is a Mongo field name, not a credential.
+    mfa_default_doc = {
+        "mfa_secret": None,  # nosec B105
+        "mfa_backup_codes": [],
+        "mfa_enabled": False,
+    }
     await db.users.update_many(
         {"mfa_secret": {"$exists": False}},
-        {"$set": {"mfa_secret": None, "mfa_backup_codes": [], "mfa_enabled": False}},
+        {"$set": mfa_default_doc},
     )
 
 
