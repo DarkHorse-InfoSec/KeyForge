@@ -43,8 +43,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    # Host port is overridable via KEYFORGE_FRONTEND_PORT (project-root .env or
+    # shell). Default 3000 matches upstream. Backend port is intentionally NOT
+    # parameterized: REACT_APP_BACKEND_URL is baked into the frontend build, so
+    # changing the backend host port without rebuilding would break the SPA.
     ports:
-      - "3000:3000"
+      - "${KEYFORGE_FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
 

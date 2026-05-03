@@ -140,6 +140,7 @@ WDS_SOCKET_PORT=443
 - [ ] **`tests/_test_helpers.py` overrides `ENCRYPTION_KEY` and `JWT_SECRET`** at import time. Pytest does not see the values from `backend/.env` or the shell; the test helper hardcodes valid keys for determinism. If you write a new test that constructs a Fernet directly, do NOT also try to override these; the helper is the single source of truth.
 - [ ] **CI's `e2e/tests/auth.spec.js` and `e2e/tests/dashboard.spec.js` are `test.describe.skip`'d** until the cookie-auth rewrite (task #11). The job runs but those suites are skipped. Other e2e tests still run.
 - [ ] **Three starlette CVEs are documented in `SECURITY_FINDINGS.md`** because `fastapi==0.110.1` hard-pins `starlette>=0.37.2,<0.38.0`. Upgrading both is a coordinated change; do not silently bump.
+- [ ] **Frontend host port is overridable via `KEYFORGE_FRONTEND_PORT`** (default 3000). Set in project-root `.env` (gitignored; consumed by both `docker compose` and the inline loader in `e2e/playwright.config.js`). Use this when port 3000 is taken on a dev machine. Backend port is intentionally hardcoded to 8001 because `REACT_APP_BACKEND_URL` is baked into the frontend build at compile time; changing it requires rebuilding the frontend.
 
 ### Resolved (kept here as a paper trail; do NOT re-introduce)
 
